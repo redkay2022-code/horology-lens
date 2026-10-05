@@ -17,3 +17,4 @@
 - Keep grid/player selection in the feed and clean-view state in the shared provider so video overlays and shell navigation fade together without interrupting playback.
 - Use generated watch photography and CDN-hosted looping cinematic mock films, not live brand footage; this keeps demo media available without external hotlinks.
 - Keep Instagram caption and watermark previews local to the upload editor, separate from the native feed post, because simulated cross-post settings must not imply a real export or alter WRISTORY playback.
+- Use react-zoom-pan-pinch on the existing video element for macro inspection, with local per-post transforms and shared clean-view state, so gestures remain bounded and playback never remounts on entry or exit.
