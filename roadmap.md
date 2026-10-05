@@ -12,3 +12,5 @@
 - [x] Verify grid, playback, swipe navigation and clean view on desktop and mobile
 - [x] Add live Instagram caption and optional video spec overlay previews to upload Step 3
 - [x] Verify Instagram preview updates, overlay toggle and native publishing
+- [ ] Add distraction-free macro drag/pinch inspection and smooth exit
+- [ ] Verify macro playback, bounds, pan, touch zoom and restored controls
