@@ -2,10 +2,10 @@ import submariner from '@/assets/submariner.jpg';
 import royalOak from '@/assets/royal-oak.jpg';
 import nautilus from '@/assets/nautilus.jpg';
 import speedmaster from '@/assets/speedmaster.jpg';
-import subVideo from '@/assets/submariner.mp4.asset.json';
-import apVideo from '@/assets/royal-oak.mp4.asset.json';
-import ppVideo from '@/assets/nautilus.mp4.asset.json';
-import omegaVideo from '@/assets/speedmaster.mp4.asset.json';
+import subVideo from '@/assets/submariner.webm.asset.json';
+import apVideo from '@/assets/royal-oak.webm.asset.json';
+import ppVideo from '@/assets/nautilus.webm.asset.json';
+import omegaVideo from '@/assets/speedmaster.webm.asset.json';
 
 export type Watch = {
   id: string; brand: string; model: string; ref: string; year: number; image: string; video: string;
