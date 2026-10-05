@@ -177,7 +177,7 @@ export function UploadSheet() {
         <label className="wrist-input">📏 Wrist size<span><input aria-label="Wrist size" inputMode="decimal" value={wrist} onChange={e => setWrist(e.target.value.replace(/[^\d.]/g, ''))} /> cm</span></label>
         <Button variant="recognition" className="auto-detect" onClick={() => setScan(0)} disabled={scan >= 0 && scan < 100}><Sparkles /> {scan < 0 ? 'AI Auto-Detect Watch Spec' : scan < 100 ? `Scanning frames… ${scan}%` : 'Spec detected · scan again'}</Button>
         {scan >= 0 && <progress max="100" value={scan} />}
-        {scan === 100 && <div className="scan-results">{(['brand', 'model', 'ref'] as const).map(k => <label key={k}>{k === 'ref' ? 'Reference' : k[0].toUpperCase() + k.slice(1)}<input aria-label={k} value={spec[k]} onChange={e => setSpec({ ...spec, [k]: e.target.value })} /></label>)}</div>}
+        {scan === 100 && <div className="scan-results">{(['brand', 'model', 'ref'] as const).map(k => <label key={k}>{k === 'ref' ? 'Reference' : k.charAt(0).toUpperCase() + k.slice(1)}<input aria-label={k} value={spec[k]} onChange={e => setSpec({ ...spec, [k]: e.target.value })} /></label>)}</div>}
         <div className="editor-nav"><Button variant="outline" onClick={() => setStep(2)}><ArrowLeft /> Back</Button><Button onClick={publish}><Check /> Publish</Button></div>
         <p className="market-note">Simulated AI · this post stays in your current session.</p>
       </>}
