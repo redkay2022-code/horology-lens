@@ -62,9 +62,12 @@ export function UploadSheet() {
   const [wrist, setWrist] = useState('16.5');
   const [scan, setScan] = useState(-1);
   const [spec, setSpec] = useState({ brand: '', model: '', ref: '' });
+  const [instagramOverlay, setInstagramOverlay] = useState(false);
+  const watchLabel = `${spec.brand || '[Brand]'} ${spec.model || '[Model]'} (Ref. ${spec.ref || '[RefNo]'})`;
+  const instagramCaption = [caption.trim(), `⌚ Watch: ${watchLabel}\n📏 Wrist Size: ${wrist || '[WristSize]'}${wrist ? ' cm' : ''}\n📲 Full specs on @WRISTORY app`].filter(Boolean).join('\n\n');
 
   const isVideo = !!file?.type.startsWith('video/');
-  const reset = () => { setStep(1); setFile(null); setUrl(''); setFilter('Original'); setText(''); setTrack(null); setScan(-1); setSpec({ brand: '', model: '', ref: '' }); setAdj({ brightness: 100, contrast: 100, saturation: 100, vignette: 20 }); };
+  const reset = () => { setStep(1); setFile(null); setUrl(''); setFilter('Original'); setText(''); setTrack(null); setScan(-1); setSpec({ brand: '', model: '', ref: '' }); setInstagramOverlay(false); setAdj({ brightness: 100, contrast: 100, saturation: 100, vignette: 20 }); };
   const close = () => { reset(); closeUpload(); };
   const choose = (next?: File) => {
     if (!next) return;
@@ -73,7 +76,7 @@ export function UploadSheet() {
     setError(''); setFile(next); setUrl(URL.createObjectURL(next));
   };
   const cssFilter = useMemo(() => [FILTERS.find(f => f.id === filter)?.css, `brightness(${adj.brightness / 100}) contrast(${adj.contrast / 100}) saturate(${adj.saturation / 100})`].filter(Boolean).join(' '), [filter, adj]);
-  const fontCls = FONTS.find(f => f.id === font)!.cls;
+  const fontCls = FONTS.find(f => f.id === font)?.cls ?? FONTS[0].cls;
 
   useEffect(() => { const v = videoRef.current; if (v) v.volume = vol.original / 100; }, [vol.original, url, step]);
   useEffect(() => {
@@ -178,6 +181,18 @@ export function UploadSheet() {
         <Button variant="recognition" className="auto-detect" onClick={() => setScan(0)} disabled={scan >= 0 && scan < 100}><Sparkles /> {scan < 0 ? 'AI Auto-Detect Watch Spec' : scan < 100 ? `Scanning frames… ${scan}%` : 'Spec detected · scan again'}</Button>
         {scan >= 0 && <progress max="100" value={scan} />}
         {scan === 100 && <div className="scan-results">{(['brand', 'model', 'ref'] as const).map(k => <label key={k}>{k === 'ref' ? 'Reference' : k.charAt(0).toUpperCase() + k.slice(1)}<input aria-label={k} value={spec[k]} onChange={e => setSpec({ ...spec, [k]: e.target.value })} /></label>)}</div>}
+        <section className="instagram-post" aria-labelledby="instagram-preview-title">
+          <h3 id="instagram-preview-title">Instagram Post Preview</h3>
+          <div className="instagram-preview-media editor-canvas" style={{ aspectRatio: aspect }}>
+            {isVideo ? <video src={url} autoPlay loop playsInline muted style={{ filter: cssFilter }} /> : <img src={url} alt="Instagram post preview" style={{ filter: cssFilter }} />}
+            <div className="editor-vignette" style={{ opacity: adj.vignette / 100 }} />
+            {text && <div className={`editor-text ${fontCls}`}>{text}</div>}
+            {isVideo && instagramOverlay && <div className="instagram-spec-overlay"><strong>WRISTORY</strong><span>{spec.brand || '[Brand]'} {spec.model || '[Model]'}</span><small>Ref. {spec.ref || '[RefNo]'} · {wrist || '—'} cm wrist</small></div>}
+          </div>
+          <p className="instagram-caption" aria-label="Generated Instagram caption" aria-live="polite">{instagramCaption}</p>
+        </section>
+        <label className="instagram-overlay-option"><input type="checkbox" checked={instagramOverlay} onChange={e => setInstagramOverlay(e.target.checked)} /><span>Include minimal WRISTORY spec overlay on Instagram video</span></label>
+        <p className="market-note">Instagram preview only · no cross-post or watermarked video export.</p>
         <div className="editor-nav"><Button variant="outline" onClick={() => setStep(2)}><ArrowLeft /> Back</Button><Button onClick={publish}><Check /> Publish</Button></div>
         <p className="market-note">Simulated AI · this post stays in your current session.</p>
       </>}
