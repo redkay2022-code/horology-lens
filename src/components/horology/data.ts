@@ -36,4 +36,4 @@ export const watches: [Watch, Watch, Watch, Watch] = [
 export const categories = ['For You','Rolex','Vintage','Microbrands','Complications','Lume Shots','ASMR Sound'];
 export const money = (value: number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(value);
 export const compact = (value: number) => value >= 1000 ? `${(value/1000).toFixed(1)}K` : `${value}`;
-export const pageHead = (title: string, description: string) => ({meta:[{title:`${title} — HOROLOGY`},{name:'description',content:description},{property:'og:title',content:`${title} — HOROLOGY`},{property:'og:description',content:description},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]});
+export const pageHead = (title: string, description: string) => ({meta:[{title:`${title} — WRISTORY`},{name:'description',content:description},{property:'og:title',content:`${title} — WRISTORY`},{property:'og:description',content:description},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]});
