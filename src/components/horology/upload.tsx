@@ -115,7 +115,7 @@ export function UploadSheet() {
     close();
   };
 
-  return <BottomSheet open={uploadOpen} onClose={close} title={['Select & crop', 'Edit your film', 'Post details'][step - 1]}>
+  return <BottomSheet open={uploadOpen} onClose={close} title={['Select & crop', 'Edit your film', 'Post details'][step - 1] ?? 'Upload'}>
     <div className="upload-content media-editor">
       <ol className="editor-steps" aria-label="Upload steps">{['Media', 'Edit', 'Post'].map((s, i) => <li key={s} className={step >= i + 1 ? 'is-done' : ''}><span>{i + 1}</span>{s}</li>)}</ol>
 
