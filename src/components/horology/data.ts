@@ -18,6 +18,8 @@ export type Watch = {
   creator: string; initials: string; caption: string; tags: string; likes: number; comments: number; saves: number;
   wrist: number; diameter: number; thickness: number; lug: string; movement: string; type: string;
   reserve: number; vph: string; dial: string; bezel: string; water: string; retail: number; market: number; category: string[]; details: WatchDetails;
+  music?: { title: string; artist: string };
+  edit?: { kind: 'video' | 'photo'; aspect: string; cssFilter: string; vignette: number; text?: string; textStyle?: string; trim?: [number, number]; originalVolume: number; bgmVolume: number };
 };
 export const watches: [Watch, Watch, Watch, Watch] = [
   { id:'rolex', brand:'Rolex', model:'Submariner Date', ref:'126610LN', year:2020, image:submariner, video:subVideo.url,
