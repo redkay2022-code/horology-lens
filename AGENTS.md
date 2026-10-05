@@ -8,3 +8,9 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep watch content in typed shared data and community state in a root provider so likes, saves, follows and simulated uploads stay consistent across navigation.
+- Use separate Feed, Discover and Watchbox routes within a shared mobile app shell so each view is directly shareable with its own metadata.
+- Treat recognition, valuations and upload scanning as explicit session-only demos; no server persistence or real AI is implied.
+- Define visual roles and control variants in the global stylesheet and shared Button so the luxury theme remains coherent.
+- Use generated watch photography and CDN-hosted looping cinematic mock films, not live brand footage; this keeps demo media available without external hotlinks.
