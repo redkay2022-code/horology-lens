@@ -13,7 +13,7 @@ export type Watch = {
   wrist: number; diameter: number; thickness: number; lug: string; movement: string; type: string;
   reserve: number; vph: string; dial: string; bezel: string; water: string; retail: number; market: number; category: string[];
 };
-export const watches: Watch[] = [
+export const watches: [Watch, Watch, Watch, Watch] = [
   { id:'rolex', brand:'Rolex', model:'Submariner Date', ref:'126610LN', year:2020, image:submariner, video:subVideo.url,
     creator:'the.wrist.diary', initials:'JD', caption:'Some things don’t need an introduction.\nThe everyday icon, up close.', tags:'#Rolex #Submariner #WOTD', likes:2480, comments:128, saves:346,
     wrist:16.5, diameter:41, thickness:12, lug:'48.1', movement:'Caliber 3235', type:'Automatic', reserve:70, vph:'28,800', dial:'Black', bezel:'Cerachrom ceramic', water:'300m / 1,000 ft', retail:10250, market:14200, category:['Rolex','Lume Shots','ASMR Sound'] },
