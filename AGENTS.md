@@ -16,3 +16,4 @@
 - Define visual roles and control variants in the global stylesheet and shared Button so the luxury theme remains coherent.
 - Keep grid/player selection in the feed and clean-view state in the shared provider so video overlays and shell navigation fade together without interrupting playback.
 - Use generated watch photography and CDN-hosted looping cinematic mock films, not live brand footage; this keeps demo media available without external hotlinks.
+- Keep Instagram caption and watermark previews local to the upload editor, separate from the native feed post, because simulated cross-post settings must not imply a real export or alter WRISTORY playback.
