@@ -9,6 +9,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        nav: "nav-control",
+        upload: "upload-button",
+        videoCanvas: "video-canvas",
+        videoAction: "video-action-button",
+        follow: "follow-button",
+        ritual: "ritual-button",
+        category: "category-button",
+        wrist: "wrist-button",
+        recognition: "recognition-button",
+        spec: "spec-button",
+        dropzone: "dropzone-button",
+        filterTag: "filter-tag",
+        watchTile: "watch-tile",
+        collectionTile: "collection-tile",
         default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
