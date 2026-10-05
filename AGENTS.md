@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Keep watch content in typed shared data and community state in a root provider so likes, saves, follows and simulated uploads stay consistent across navigation.
+- Store heritage and expanded specifications in each watch's typed details record and render shared collapsible sections so every model receives the same complete drawer layout.
 - Use separate Feed, Discover and Watchbox routes within a shared mobile app shell so each view is directly shareable with its own metadata.
 - Treat recognition, valuations and upload scanning as explicit session-only demos; no server persistence or real AI is implied.
 - Define visual roles and control variants in the global stylesheet and shared Button so the luxury theme remains coherent.
