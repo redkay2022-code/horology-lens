@@ -35,13 +35,7 @@ export function MacroInspection({ active, onExit, children }: { active: boolean;
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [active, exit]);
-  return <div className={`inspection-media ${active ? 'inspection-active' : ''}`}>
-    <TransformWrapper ref={transform} disabled={!active || exiting} minScale={active && !exiting ? 1.5 : 1} maxScale={4} limitToBounds centerOnInit disablePadding
-      wheel={{ step: 0.05 }} panning={{ velocityDisabled: true }} pinch={{ allowPanning: true }} doubleClick={{ disabled: true }} zoomAnimation={{ disabled: true }}>
-      <TransformComponent wrapperClass="inspection-wrapper" contentClass="inspection-content">{children}</TransformComponent>
-    </TransformWrapper>
-    {active && <>
-      <div className="inspection-gestures" aria-label="Macro inspection surface" onDoubleClick={() => void exit()}
+  return <div className={`inspection-media ${active ? 'inspection-active' : ''}`} onDoubleClick={() => void exit()}
         onTouchStart={event => {
           const point = event.touches[0];
           if (event.touches.length !== 1 || !point) { touch.current = null; lastTap.current = 0; return; }
@@ -53,10 +47,16 @@ export function MacroInspection({ active, onExit, children }: { active: boolean;
         }}
         onTouchEnd={() => {
           const start = touch.current; touch.current = null;
-          if (!start || start.moved || Date.now() - start.time > 250) { lastTap.current = 0; return; }
+          if (!active || !start || start.moved || Date.now() - start.time > 250) { lastTap.current = 0; return; }
           const now = Date.now();
           if (lastTap.current && now - lastTap.current < 300) { lastTap.current = 0; void exit(); } else lastTap.current = now;
-        }} />
+        }}>
+    <TransformWrapper ref={transform} disabled={!active || exiting} minScale={active && !exiting ? 1.5 : 1} maxScale={4} limitToBounds centerOnInit disablePadding
+      wheel={{ step: 0.05 }} panning={{ velocityDisabled: true }} pinch={{ allowPanning: true }} doubleClick={{ disabled: true }} zoomAnimation={{ disabled: true }}>
+      <TransformComponent wrapperClass="inspection-wrapper" contentClass="inspection-content">{children}</TransformComponent>
+    </TransformWrapper>
+    {active && <>
+
       <div className="inspection-pill"><span>🔍 Macro Zoom Mode • Drag to Explore | Tap to Exit</span><Button variant="ghost" size="icon" aria-label="Exit macro zoom" title="Exit macro zoom" disabled={exiting} onClick={() => void exit()}><X size={14} /></Button></div>
     </>}
   </div>;
