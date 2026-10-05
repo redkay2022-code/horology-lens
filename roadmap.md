@@ -7,6 +7,6 @@
 - [x] Verify mobile and desktop interactions
 - [x] Expand all four watch heritage stories and detailed specification sections
 - [x] Verify expanded drawers and specification filtering
-- [ ] Make a three-column masonry grid the default feed with video previews and player switching
-- [ ] Add clean view that hides all overlays and restores them on tap
-- [ ] Verify grid, playback, swipe navigation and clean view on desktop and mobile
+- [x] Make a three-column masonry grid the default feed with video previews and player switching
+- [x] Add clean view that hides all overlays and restores them on tap
+- [x] Verify grid, playback, swipe navigation and clean view on desktop and mobile
