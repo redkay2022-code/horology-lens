@@ -11,4 +11,4 @@
 - [x] Add clean view that hides all overlays and restores them on tap
 - [x] Verify grid, playback, swipe navigation and clean view on desktop and mobile
 - [x] Add live Instagram caption and optional video spec overlay previews to upload Step 3
-- [ ] Verify Instagram preview updates, overlay toggle and native publishing
+- [x] Verify Instagram preview updates, overlay toggle and native publishing
