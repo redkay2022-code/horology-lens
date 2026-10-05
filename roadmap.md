@@ -5,5 +5,5 @@
 - [x] Virtual watchbox and saved videos
 - [x] Simulated upload and AI scanner
 - [x] Verify mobile and desktop interactions
-- [ ] Expand all four watch heritage stories and detailed specification sections
-- [ ] Verify expanded drawers and specification filtering
+- [x] Expand all four watch heritage stories and detailed specification sections
+- [x] Verify expanded drawers and specification filtering
