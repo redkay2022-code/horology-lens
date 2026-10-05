@@ -76,7 +76,7 @@ export function UploadSheet() {
     setError(''); setFile(next); setUrl(URL.createObjectURL(next));
   };
   const cssFilter = useMemo(() => [FILTERS.find(f => f.id === filter)?.css, `brightness(${adj.brightness / 100}) contrast(${adj.contrast / 100}) saturate(${adj.saturation / 100})`].filter(Boolean).join(' '), [filter, adj]);
-  const fontCls = FONTS.find(f => f.id === font)?.cls ?? FONTS[0].cls;
+  const fontCls = FONTS.find(f => f.id === font)?.cls ?? 'text-style-display';
 
   useEffect(() => { const v = videoRef.current; if (v) v.volume = vol.original / 100; }, [vol.original, url, step]);
   useEffect(() => {
@@ -87,7 +87,7 @@ export function UploadSheet() {
   useEffect(() => {
     if (scan < 0 || scan >= 100) return;
     const t = setTimeout(() => setScan(s => Math.min(100, s + 10)), 120);
-    if (scan + 10 >= 100) { const b = watches[Math.floor(Math.random() * watches.length)]; setSpec({ brand: b.brand, model: b.model, ref: b.ref }); }
+    if (scan + 10 >= 100) { const b = watches[Math.floor(Math.random() * watches.length)] ?? watches[0]; setSpec({ brand: b.brand, model: b.model, ref: b.ref }); }
     return () => clearTimeout(t);
   }, [scan]);
   useEffect(() => { if (!previewing) return; const t = setTimeout(() => setPreviewing(false), 4000); return () => clearTimeout(t); }, [previewing]);
@@ -112,8 +112,8 @@ export function UploadSheet() {
       wrist: parseFloat(wrist) || 16.5, creator: 'alex.morgan', initials: 'AM', caption: caption.replace(/#\w+/g, '').trim(),
       tags: (caption.match(/#\w+/g) || ['#WOTD']).join(' '), likes: 0, comments: 0, saves: 0,
       video: isVideo ? url : '', image: isVideo ? base.image : url,
-      music: track ? { title: track.title, artist: track.artist } : undefined,
-      edit: { kind: isVideo ? 'video' : 'photo', aspect, cssFilter, vignette: adj.vignette, text: text || undefined, textStyle: fontCls, trim: isVideo ? trim : undefined, originalVolume: vol.original, bgmVolume: vol.bgm },
+      ...(track ? { music: { title: track.title, artist: track.artist } } : {}),
+      edit: { kind: isVideo ? 'video' : 'photo', aspect, cssFilter, vignette: adj.vignette, ...(text ? { text } : {}), textStyle: fontCls, ...(isVideo ? { trim } : {}), originalVolume: vol.original, bgmVolume: vol.bgm },
     });
     close();
   };
