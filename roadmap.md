@@ -1,5 +1,5 @@
 # Horology
-- [ ] Add and verify Korean live challenge and gallery upload tabs, mission timer, recording preview and conditional badges
+- [x] Add and verify Korean live challenge and gallery upload tabs, mission timer, recording preview and conditional badges
 - [x] Luxury mobile feed and four looping watch films
 - [x] Community controls, comments, wrist badge and technical specification drawer
 - [x] Discovery search and filters
