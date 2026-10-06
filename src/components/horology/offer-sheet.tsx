@@ -1,70 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { AlertTriangle, Flame, Lock, MessageSquare, Send, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Flame, Lock, BadgeCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { BottomSheet } from './sheets';
 import { money, type Watch } from './data';
-
-const START = 14500;
-const STEP = 100;
-type Msg = { from: 'me' | 'seller'; text: string };
+import { useCommunity } from './store';
+import { auctionDisclaimer, canOffer } from './auction';
+import { ChatLounge } from './chat-lounge';
 
 export function OfferSheet({ watch, open, onClose }: { watch: Watch; open: boolean; onClose: () => void }) {
- const [top, setTop] = useState(START);
- const [offer, setOffer] = useState(START + STEP);
- const [mine, setMine] = useState<number | null>(null);
- const [outbid, setOutbid] = useState(false);
- const [rival, setRival] = useState<number | null>(null);
- const [accepted, setAccepted] = useState(false);
- const [msgs, setMsgs] = useState<Msg[]>([]);
- const [draft, setDraft] = useState('');
- const min = top + STEP;
- const leading = mine !== null && mine === top && !rival;
-
- useEffect(() => { if (offer < min) setOffer(min); }, [min]); // keep input valid when the top offer moves
-
- const toggleOutbid = (on: boolean) => {
-  setOutbid(on);
-  if (on) { const r = Math.max(15200, top + 200); setRival(r); setTop(r); setAccepted(false); }
-  else setRival(null);
- };
- const submit = () => {
-  if (offer < min) { toast.error(`최소 ${money(min)} 이상 입력해 주세요.`); return; }
-  setTop(offer); setMine(offer); setRival(null); setOutbid(false);
-  toast.success(`${money(offer)} non-binding offer sent`, { description: 'Demo only · no payment is taken.' });
- };
- const accept = () => {
-  setAccepted(true);
-  setMsgs([{ from: 'seller', text: `Hi! I accepted your ${money(mine ?? top)} offer. Happy to talk details here — any payment or handoff we arrange directly.` }]);
- };
- const send = () => { const t = draft.trim(); if (!t) return; setMsgs(m => [...m, { from: 'me', text: t }]); setDraft(''); };
-
+ const { auctions, now, submitOffer, simulateOutbid, acceptOffer }=useCommunity();
+ const a=auctions[watch.id];
+ const step=watch.auction?.increment??100;
+ const top=a?.highest??watch.auction?.highest??0;
+ const min=top+step;
+ const [choice,setChoice]=useState<{base:number;amount:number}>({base:top,amount:min});
+ const offer=choice.base===top?choice.amount:min;
+ const choose=(amount:number)=>setChoice({base:top,amount});
+ const leading=a?.mine!==null&&a?.mine===top;
+ const eligible=canOffer(watch,a,now);
+ const accepted=a?.accepted!=null;
  return <BottomSheet open={open} onClose={onClose} title="Silent Bid">
   <div className="offer-sheet">
-   {rival && <button type="button" className="offer-alert" onClick={() => setOffer(rival + STEP)}><AlertTriangle size={15}/> ⚠️ Someone just offered {money(rival)}! Tap to counter-offer.</button>}
-   <p className="offer-watch">{watch.brand} {watch.model} · Ref. {watch.ref} <span><ShieldCheck size={12}/> Live Verified</span></p>
-   <div className="offer-top">
-    <small>Current Highest Offer</small>
-    <strong>{money(top)}</strong>
-    <span>Suggested Next Min Offer: {money(min)}</span>
-    {leading && <em>You hold the top offer</em>}
-   </div>
-   <div className="offer-quick">
-    {[100, 500, 1000].map(a => <Button key={a} variant="outline" onClick={() => setOffer(top + a)} aria-pressed={offer === top + a}>+{money(a)}</Button>)}
-    <label className="offer-input"><span>$</span><input type="number" inputMode="numeric" min={min} step={STEP} value={offer} aria-label="Custom offer amount" onChange={e => setOffer(Number(e.target.value) || 0)}/></label>
-   </div>
-   <Button className="w-full offer-submit" onClick={submit}><Flame/>[ Submit {money(offer)} Offer ]</Button>
-   <div className="offer-sim">
-    <label><Switch checked={outbid} onCheckedChange={toggleOutbid}/> Simulate Outbid Event</label>
-    <Button variant="ghost" size="sm" disabled={!leading || accepted} onClick={accept}>Simulate seller accepts</Button>
-   </div>
-   {accepted ? <section className="offer-chat" aria-label="Private chat with seller">
-    <header><MessageSquare size={14}/> Private 1:1 chat · @{watch.creator}</header>
-    <div className="offer-msgs">{msgs.map((m, i) => <p key={i} className={m.from === 'me' ? 'is-me' : ''}>{m.text}</p>)}</div>
-    <form onSubmit={e => { e.preventDefault(); send(); }}><input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Message the seller…" aria-label="Chat message"/><Button size="icon" type="submit" aria-label="Send message"><Send/></Button></form>
-   </section> : <p className="offer-locked"><Lock size={12}/> 1:1 chat unlocks only when the seller accepts your offer.</p>}
-   <p className="offer-note">Offers are non-binding. WRISTORY is only a discovery & messaging layer — negotiation, payment and handoff happen off-platform between users, with no platform involvement or liability. Demo: offers and chat are session-only.</p>
+   <span className="auction-kicker">NON-BINDING OFFER · SESSION DEMO</span>
+   {a?.outbid&&<Button variant="ghost" className="offer-alert" onClick={()=>choose(min)}><AlertTriangle size={16}/>Someone just offered {money(top)}! Tap to counter-offer.</Button>}
+   <div className="offer-watch"><img src={watch.image} alt={watch.model}/><div><small>{watch.brand}</small><strong>{watch.model}</strong><span>Ref. {watch.ref}</span><span className="owner-badge"><BadgeCheck size={12}/> Live Verified · DEMO</span></div></div>
+   <div className="offer-top"><small>Current Highest Offer</small><strong>{money(top)}</strong><span>Suggested Next Min Offer: {money(min)}</span>{leading&&!accepted&&<em>You hold the top offer</em>}</div>
+   {!accepted&&<><div className="offer-quick">{[100,500,1000].filter(n=>n>=step).map(n=><Button key={n} variant="outline" aria-pressed={offer===top+n} disabled={!eligible} onClick={()=>choose(top+n)}>+{money(n)}</Button>)}</div>
+   <label className="offer-input"><span>Custom offer · USD</span><input type="number" inputMode="numeric" min={min} step="1" disabled={!eligible} value={offer} aria-label="Custom offer amount" onChange={e=>choose(Number(e.target.value))}/></label>
+   <Button className="offer-submit" disabled={!eligible||!Number.isSafeInteger(offer)||offer<min} onClick={()=>{if(submitOffer(watch,offer))toast.success('Offer sent · seller notification simulated',{description:'Non-binding demo. No payment taken.'});else toast.error(`Minimum offer: ${money(min)}`)}}><Flame/>[ Submit {money(offer)} Offer ]</Button>
+   {a?.mine!=null&&<p className="offer-receipt">Your offer: {money(a.mine)} · {leading?'Awaiting seller acceptance':'Outbid'}</p>}
+   <div className="offer-sim"><label><Switch checked={a?.outbid??false} disabled={!eligible} onCheckedChange={on=>simulateOutbid(watch,on)}/>Simulate Outbid Event</label><Button variant="outline" size="sm" disabled={!eligible||!leading} onClick={()=>{acceptOffer(watch);toast.success('Seller accepted · private lounge unlocked (demo)')}}>Simulate seller accepts</Button></div>
+   <p className="offer-locked"><Lock size={13}/>{eligible?'Private 1:1 chat unlocks after seller acceptance.':'This auction has ended.'}</p></>}
+   {accepted&&<><div className="accepted-notice"><BadgeCheck size={16}/>Offer accepted · Private lounge unlocked</div><ChatLounge watch={watch}/></>}
+   <p className="auction-disclaimer">{auctionDisclaimer}</p><p className="auction-disclaimer">All offers, notifications, acceptance and messages are simulated for this session. No payments or escrow.</p>
   </div>
  </BottomSheet>;
 }
