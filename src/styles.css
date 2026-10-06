@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @source "../src";
 @custom-variant dark (&:is(.dark *));
+:root { --studio-background:oklch(0.159 0 0); --studio-surface:oklch(0.235 0 0); }
 @theme inline {
  --font-sans: 'Manrope', sans-serif; --font-display: 'Montserrat', 'Manrope', sans-serif;
  --radius-sm:4px; --radius-md:6px; --radius-lg:8px; --radius-xl:12px;

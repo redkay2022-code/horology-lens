@@ -26,6 +26,7 @@ export function UploadStudio() {
  const [trim, setTrim] = useState<[number, number]>([0, 6]);
  const input = useRef<HTMLInputElement>(null);
  const video = useRef<HTMLVideoElement>(null);
+ const publishedMedia = useRef(new Set<string>());
  useEffect(() => {
   if (!expires || mode !== 'live' || stage === 'preview') return;
   const tick = () => { const left = Math.max(0, Math.ceil((expires - Date.now()) / 1000)); setRemaining(left); if (!left) { setStage('ready'); setExpires(null); setMission(false); setError('미션 시간이 만료되었습니다. 새 미션을 받아주세요.'); } };
@@ -36,7 +37,7 @@ export function UploadStudio() {
   const timer = setTimeout(() => { if (recording > 1) setRecording(recording - 1); else setStage('preview'); }, 1000);
   return () => clearTimeout(timer);
  }, [stage, recording]);
- useEffect(() => { if (!media) return; return () => URL.revokeObjectURL(media); }, [media]);
+ useEffect(() => { if (!media) return; return () => { if (!publishedMedia.current.has(media)) URL.revokeObjectURL(media); }; }, [media]);
  const reset = () => { setStage('ready'); setMission(false); setExpires(null); setRemaining(180); setRecording(3); setMedia(''); setError(''); setTool(''); setFilter('Original'); setBgm(false); setTrim([0, 6]); };
  const close = () => { reset(); closeUpload(); };
  const switchMode = (next: Mode) => { reset(); setMode(next); };
@@ -57,6 +58,7 @@ export function UploadStudio() {
    edit: { kind: 'video', aspect: '9/16', cssFilter: mode === 'gallery' ? filters[filter] : '', vignette: 0, trim: mode === 'gallery' ? trim : [0, 3], originalVolume: 80, bgmVolume: bgm ? 60 : 0 },
   });
   // Published blob URLs belong to the session post; the editor must not revoke them.
+  if (media) publishedMedia.current.add(media);
   setMedia(''); closeUpload(); setStage('ready'); setExpires(null); setBgm(false); setFilter('Original'); setTool('');
  };
  const livePreview = mode === 'live' && stage === 'preview';
