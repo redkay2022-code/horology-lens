@@ -24,6 +24,8 @@ const buttonVariants = cva(
         watchTile: "watch-tile",
         collectionTile: "collection-tile",
         feedTile: "feed-grid-tile",
+        silentBid: "silent-bid",
+        displayOnly: "display-only-button",
         default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
