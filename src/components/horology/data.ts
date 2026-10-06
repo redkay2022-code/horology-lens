@@ -20,7 +20,7 @@ export type Watch = {
   reserve: number; vph: string; dial: string; bezel: string; water: string; retail: number; market: number; category: string[]; details: WatchDetails;
   music?: { title: string; artist: string };
   is_live_verified?: boolean; foundingMember?: boolean;
-  auction?: { highest: number; count: number; increment: number; seconds: number };
+  auction?: { highest: number; count: number; increment: number; seconds: number } | undefined;
   edit?: { kind: 'video' | 'photo'; aspect: string; cssFilter: string; vignette: number; text?: string; textStyle?: string; trim?: [number, number]; originalVolume: number; bgmVolume: number };
 };
 export const watches: [Watch, Watch, Watch, Watch] = [
