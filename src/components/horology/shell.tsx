@@ -2,7 +2,7 @@ import { Link, useRouterState } from '@tanstack/react-router';
 import { Watch, Compass, Plus, Grid2X2, CircleHelp, ArrowUpRight, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCommunity } from './store';
-import { UploadSheet } from './upload';
+import { UploadStudio as UploadSheet } from './upload-studio';
 import { type ReactNode } from 'react';
 export function AppShell({children}:{children:ReactNode}) {
  const path=useRouterState({select:s=>s.location.pathname});const {openUpload,cleanView}=useCommunity();
