@@ -10,8 +10,9 @@
 <!-- LOVABLE:END -->
 
 - Keep watch content in typed shared data and community state in a root provider so likes, saves, follows and simulated uploads stay consistent across navigation.
+- Keep demo auction eligibility on typed watch records and offer, countdown and accepted-chat state in the shared community provider; every entry point enforces eligibility and expiry so feed, listings and chat stay consistent without real transactions.
 - Store heritage and expanded specifications in each watch's typed details record and render shared collapsible sections so every model receives the same complete drawer layout.
-- Use separate Feed, Discover and Watchbox routes within a shared mobile app shell so each view is directly shareable with its own metadata.
+- Use separate Feed, Active Bids, Chat, Discover and Watchbox routes within the shared mobile shell so each view is shareable with its own metadata.
 - Treat recognition, valuations and upload scanning as explicit session-only demos; no server persistence or real AI is implied.
 - Keep live challenge recording and its ownership badges explicitly simulated and isolated from gallery uploads; client timers cannot establish ownership or server verification.
 - Define visual roles and control variants in the global stylesheet and shared Button so the luxury theme remains coherent.
