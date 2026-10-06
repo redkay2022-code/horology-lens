@@ -24,6 +24,7 @@ export function UploadStudio() {
  const [bgm, setBgm] = useState(false);
  const [duration, setDuration] = useState(6);
  const [trim, setTrim] = useState<[number, number]>([0, 6]);
+  const [missionTime,setMissionTime]=useState('04:20');
  const input = useRef<HTMLInputElement>(null);
  const video = useRef<HTMLVideoElement>(null);
  const publishedMedia = useRef(new Set<string>());
@@ -41,7 +42,7 @@ export function UploadStudio() {
  const reset = () => { setStage('ready'); setMission(false); setExpires(null); setRemaining(180); setRecording(3); setMedia(''); setError(''); setTool(''); setFilter('Original'); setBgm(false); setTrim([0, 6]); };
  const close = () => { reset(); closeUpload(); };
  const switchMode = (next: Mode) => { reset(); setMode(next); };
- const getMission = () => { setError(''); setRemaining(180); setExpires(Date.now() + 180000); setMission(true); };
+  const getMission = () => { setMissionTime(['04:20','08:10','10:15'][Math.floor(Math.random()*3)]??'04:20'); setError(''); setRemaining(180); setExpires(Date.now() + 180000); setMission(true); };
  const choose = (file?: File) => {
   if (!file) return;
   if (!file.type.startsWith('video/')) { setError('영상 파일을 선택해주세요.'); return; }
@@ -49,10 +50,12 @@ export function UploadStudio() {
   setMedia(URL.createObjectURL(file)); setStage('preview'); setError('');
  };
  const publish = () => {
-  if (stage !== 'preview' || (mode === 'gallery' && !media)) return;
+   if (stage !== 'preview' || (mode === 'gallery' && !media)) return;
   const base = watches[0];
   addUpload({ ...base, id: `upload-${Date.now()}`, creator: 'alex.morgan', initials: 'AM', likes: 0, saves: 0, comments: 0,
    video: mode === 'live' ? base.video : media,
+   is_live_verified: mode === 'live', foundingMember: false,
+   auction: mode === 'live' ? { highest: 14500, count: 0, increment: 100, seconds: 10800 } : undefined,
    caption: mode === 'live' ? 'Live Time Complete · simulated challenge, not verified ownership.' : 'A moment on my wrist. · Display Only', tags: '#WOTD',
    ...(bgm && mode === 'gallery' ? { music: { title: 'Midnight Escapement', artist: 'Calibre Collective' } } : {}),
    edit: { kind: 'video', aspect: '9/16', cssFilter: mode === 'gallery' ? filters[filter] : '', vignette: 0, trim: mode === 'gallery' ? trim : [0, 3], originalVolume: 80, bgmVolume: bgm ? 60 : 0 },
