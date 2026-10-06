@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActiveBidsRouteImport } from './routes/active-bids'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WatchboxRouteImport } from './routes/watchbox'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const DiscoverRoute = DiscoverRouteImport.update({
   path: '/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchboxRoute = WatchboxRouteImport.update({
   id: '/watchbox',
   path: '/watchbox',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
+  '/profile': typeof ProfileRoute
   '/watchbox': typeof WatchboxRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
+  '/profile': typeof ProfileRoute
   '/watchbox': typeof WatchboxRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
+  '/profile': typeof ProfileRoute
   '/watchbox': typeof WatchboxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/active-bids' | '/chat' | '/discover' | '/watchbox'
+  fullPaths:
+    '/' | '/active-bids' | '/chat' | '/discover' | '/profile' | '/watchbox'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/active-bids' | '/chat' | '/discover' | '/watchbox'
-  id: '__root__' | '/' | '/active-bids' | '/chat' | '/discover' | '/watchbox'
+  to: '/' | '/active-bids' | '/chat' | '/discover' | '/profile' | '/watchbox'
+  id:
+    | '__root__'
+    | '/'
+    | '/active-bids'
+    | '/chat'
+    | '/discover'
+    | '/profile'
+    | '/watchbox'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   ActiveBidsRoute: typeof ActiveBidsRoute
   ChatRoute: typeof ChatRoute
   DiscoverRoute: typeof DiscoverRoute
+  ProfileRoute: typeof ProfileRoute
   WatchboxRoute: typeof WatchboxRoute
 }
 
@@ -109,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watchbox': {
       id: '/watchbox'
       path: '/watchbox'
@@ -124,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   ActiveBidsRoute: ActiveBidsRoute,
   ChatRoute: ChatRoute,
   DiscoverRoute: DiscoverRoute,
+  ProfileRoute: ProfileRoute,
   WatchboxRoute: WatchboxRoute,
 }
 export const routeTree = rootRouteImport
