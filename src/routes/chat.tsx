@@ -6,7 +6,7 @@ import { money, pageHead } from '@/components/horology/data';
 import { useCommunity } from '@/components/horology/store';
 import { ChatLounge } from '@/components/horology/chat-lounge';
 
-export const Route=createFileRoute('/chat')({head:()=>pageHead('Private collector lounges','Your session-only private conversations, unlocked after simulated acceptance of a non-binding watch offer.'),validateSearch:(s:Record<string,unknown>):{thread?:string}=>typeof s.thread==='string'?{thread:s.thread}:{},component:ChatPage});
+export const Route=createFileRoute('/chat')({head:()=>pageHead('Private collector lounges','Your session-only private conversations, unlocked after simulated acceptance of a non-binding watch offer.'),validateSearch:(s:Record<string,unknown>):{thread?:string}=>typeof s['thread']==='string'?{thread:s['thread']}:{},component:ChatPage});
 function ChatPage(){
  const {posts,auctions}=useCommunity();const {thread}=Route.useSearch();const [selected,setSelected]=useState<string|null>(thread??null);useEffect(()=>{if(thread)setSelected(thread)},[thread]);
  const accepted=posts.filter(w=>auctions[w.id]?.accepted!=null);
