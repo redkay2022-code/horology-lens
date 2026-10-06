@@ -1,7 +1,7 @@
 # Horology
-- [ ] Connect three conditional auction feed posts, shared bidding state and acceptance-unlocked chat
-- [ ] Add Active Bids search, sorting, countdowns and Quick Offer
-- [ ] Connect live/gallery upload eligibility and verify the complete prototype
+- [x] Connect three conditional auction feed posts, shared bidding state and acceptance-unlocked chat
+- [x] Add Active Bids search, sorting, countdowns and Quick Offer
+- [x] Connect live/gallery upload eligibility and verify the complete prototype
 - [x] Add and verify Korean live challenge and gallery upload tabs, mission timer, recording preview and conditional badges
 - [x] Luxury mobile feed and four looping watch films
 - [x] Community controls, comments, wrist badge and technical specification drawer
@@ -16,5 +16,5 @@
 - [x] Verify grid, playback, swipe navigation and clean view on desktop and mobile
 - [x] Add live Instagram caption and optional video spec overlay previews to upload Step 3
 - [x] Verify Instagram preview updates, overlay toggle and native publishing
-- [ ] Add distraction-free macro drag/pinch inspection and smooth exit
+- [x] Add distraction-free macro drag/pinch inspection and smooth exit
 - [ ] Verify macro playback, bounds, pan, touch zoom and restored controls
