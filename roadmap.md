@@ -17,4 +17,4 @@
 - [x] Add live Instagram caption and optional video spec overlay previews to upload Step 3
 - [x] Verify Instagram preview updates, overlay toggle and native publishing
 - [x] Add distraction-free macro drag/pinch inspection and smooth exit
-- [ ] Verify macro playback, bounds, pan, touch zoom and restored controls
+- [x] Verify macro playback, bounds, pan, touch zoom and restored controls
