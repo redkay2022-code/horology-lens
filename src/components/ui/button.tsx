@@ -13,6 +13,7 @@ const buttonVariants = cva(
         upload: "upload-button",
         videoCanvas: "video-canvas",
         videoAction: "video-action-button",
+        cleanView: "clean-view-button",
         follow: "follow-button",
         ritual: "ritual-button",
         category: "category-button",

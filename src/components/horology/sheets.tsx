@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useState, type ReactNode } from 'react';
-import { X, Sparkles, ArrowUpRight, Send, Ruler, Cog, Droplets, Scan, Check, Volume2, ChevronDown } from 'lucide-react';
+import { X, Sparkles, ArrowUpRight, Send, Ruler, Cog, Droplets, Scan, Check, ChevronDown } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { money, type Watch } from './data';
@@ -41,4 +41,3 @@ export function CommentsSheet({open,onClose,watch}:{open:boolean;onClose:()=>voi
  return <BottomSheet open={open} onClose={onClose} title={`${watch.comments+comments.length-3} comments`}><div className="comments-list">{comments.map((c,i)=><div className="comment-row" key={i}><span className="avatar-small">{c.initials}</span><div><strong>@{c.user}</strong><p>{c.text}</p><small>{c.time} · Reply</small></div></div>)}</div><form className="comment-form" onSubmit={e=>{e.preventDefault();if(!text.trim())return;setComments(old=>[...old,{user:'alex.morgan',initials:'AM',text:text.trim(),time:'Now'}]);setText('')}}><input aria-label="Write a comment" placeholder="Add to the conversation…" value={text} onChange={e=>setText(e.target.value)}/><Button type="submit" size="icon" disabled={!text.trim()} aria-label="Post comment"><Send/></Button></form></BottomSheet>;
 }
 export function WristSheet({open,onClose,watch,onFilter}:{open:boolean;onClose:()=>void;watch:Watch;onFilter:()=>void}) { const [wrist,setWrist]=useState(watch.wrist);return <BottomSheet open={open} onClose={onClose} title="A matter of proportions"><div className="wrist-sheet"><Ruler/><h2>{watch.diameter}mm on a {watch.wrist}cm wrist</h2><p className="subtle">Lug-to-lug: {watch.lug}mm · Case thickness: {watch.thickness}mm</p><label>Your wrist size <strong>{wrist.toFixed(1)} cm / {(wrist/2.54).toFixed(1)}″</strong><input aria-label="Your wrist size" type="range" min="14" max="22" step="0.5" value={wrist} onChange={e=>setWrist(Number(e.target.value))}/></label><p>{wrist<16?'A bold, prominent fit.':wrist<18?'A balanced, everyday fit.':'A comfortable, understated fit.'}</p><Button onClick={onFilter}>Explore similar proportions <ArrowUpRight/></Button></div></BottomSheet>}
-export function SoundBadge(){return <span className="sound-badge"><Volume2 size={12}/> MECHANICAL ASMR <i/><i/><i/><i/></span>}

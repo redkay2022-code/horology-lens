@@ -13,7 +13,7 @@ const FILTERS = [
   { id: 'Lume Glow', css: 'brightness(1.12) saturate(1.3) hue-rotate(40deg) contrast(1.05)' },
 ];
 const FONTS = [{ id: 'Display', cls: 'text-style-display' }, { id: 'Serif', cls: 'text-style-serif' }, { id: 'Mono', cls: 'text-style-mono' }];
-const CATEGORIES = ['Trending Beats', 'Watch Lo-Fi', 'Jazz', 'Mechanical ASMR'];
+const CATEGORIES = ['Trending Beats', 'Watch Lo-Fi', 'Jazz'];
 const TRACKS = [
   { title: 'Midnight Escapement', artist: 'Calibre Collective', cat: 'Trending Beats', length: 142 },
   { title: 'Golden Hour Bezel', artist: 'Nova Sweep', cat: 'Trending Beats', length: 118 },
@@ -21,8 +21,6 @@ const TRACKS = [
   { title: 'Sapphire Rain', artist: 'Tick & Tape', cat: 'Watch Lo-Fi', length: 131 },
   { title: 'Blue Note Chronograph', artist: 'The Complication Trio', cat: 'Jazz', length: 204 },
   { title: 'Smoky Dial Ballad', artist: 'Ella Tourbillon', cat: 'Jazz', length: 176 },
-  { title: '28,800 Beats', artist: 'Mechanical ASMR Lab', cat: 'Mechanical ASMR', length: 90 },
-  { title: 'Crown Wind Whisper', artist: 'Mainspring Sounds', cat: 'Mechanical ASMR', length: 75 },
 ];
 const TOOLS = [
   { id: 'filters', label: 'Filters', icon: Wand2 }, { id: 'trim', label: 'Trim', icon: Scissors },
