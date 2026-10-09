@@ -8,7 +8,7 @@ describe('Session-only auction flow',()=>{
   const {result}=renderHook(()=>useCommunity(),{wrapper:HorologyProvider});
   const rolex=auctionPosts[0];const gallery=auctionPosts[2];
   if(!rolex||!gallery)throw new Error('Missing demo fixtures');
-  expect(result.current.posts).toHaveLength(3);
+  expect(result.current.posts).toHaveLength(13);
   expect(result.current.auctions[rolex.id]?.highest).toBe(15200);
   expect(canOffer(gallery,result.current.auctions[gallery.id],Date.now())).toBe(false);
   act(()=>{expect(result.current.submitOffer(gallery,100000)).toBe(false);expect(result.current.submitOffer(rolex,15201)).toBe(false);result.current.sendMessage(rolex.id,'locked');result.current.acceptOffer(rolex)});
