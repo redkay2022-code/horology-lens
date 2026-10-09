@@ -1,4 +1,5 @@
 # Horology
+- [ ] Remove ASMR, emphasize Clean View and verify three-column default Home
 - [x] Connect three conditional auction feed posts, shared bidding state and acceptance-unlocked chat
 - [x] Add Active Bids search, sorting, countdowns and Quick Offer
 - [x] Connect live/gallery upload eligibility and verify the complete prototype
