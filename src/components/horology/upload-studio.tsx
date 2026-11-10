@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { BottomSheet } from './sheets';
 import { watches } from './data';
 import { useCommunity } from './store';
+import { resolveIdentity, UNCONFIRMED } from './watch-identity';
 
 const filters = { Original: '', Vintage: 'sepia(.45) contrast(.95)', Gold: 'sepia(.3) saturate(1.3)', Mono: 'grayscale(1)' };
 type Mode = 'live' | 'gallery';
@@ -25,6 +26,7 @@ export function UploadStudio() {
  const [duration, setDuration] = useState(6);
  const [trim, setTrim] = useState<[number, number]>([0, 6]);
   const [baseId,setBaseId]=useState(watches[0].id);
+  const [idSize,setIdSize]=useState<number|undefined>();const [idRef,setIdRef]=useState<string|undefined>();
   const [missionTime,setMissionTime]=useState('04:20');
  const input = useRef<HTMLInputElement>(null);
  const video = useRef<HTMLVideoElement>(null);
@@ -48,11 +50,13 @@ export function UploadStudio() {
   if (!file) return;
   if (!file.type.startsWith('video/')) { setError('영상 파일을 선택해주세요.'); return; }
   if (file.size > 200 * 1024 * 1024) { setError('200 MB 이하의 영상을 선택해주세요.'); return; }
-  setMedia(URL.createObjectURL(file)); setStage('preview'); setError('');
+  setMedia(URL.createObjectURL(file)); setStage('preview'); setBaseId(watches[[...file.name].reduce((a, ch) => a + ch.charCodeAt(0), 0) % watches.length]!.id); setIdSize(undefined); setIdRef(undefined); setError('');
  };
  const publish = () => {
-   if (stage !== 'preview' || (mode === 'gallery' && !media)) return;
-  const base = (mode === 'gallery' && watches.find(w => w.id === baseId)) || watches[0];
+   if (stage !== 'preview' || (mode === 'gallery' && (!media || idResult.status !== 'resolved'))) return;
+  const picked = (mode === 'gallery' && watches.find(w => w.id === baseId)) || watches[0];
+  const id = mode === 'gallery' && idResult.status === 'resolved' ? idResult.identity : null;
+  const base = id ? { ...picked, model: id.model, ref: id.ref ?? '', diameter: id.size ?? picked.diameter, identity: id } : picked;
   addUpload({ ...base, id: `upload-${Date.now()}`, creator: 'alex.morgan', initials: 'AM', likes: 0, saves: 0, comments: 0,
    video: mode === 'live' ? base.video : media,
    is_live_verified: mode === 'live', foundingMember: false,
@@ -65,6 +69,7 @@ export function UploadStudio() {
   if (media) publishedMedia.current.add(media);
   setMedia(''); closeUpload(); setStage('ready'); setExpires(null); setBgm(false); setFilter('Original'); setTool('');
  };
+const idResult = resolveIdentity(baseId, idSize, idRef);
  const livePreview = mode === 'live' && stage === 'preview';
  return <BottomSheet open={uploadOpen} onClose={close} title="WRISTORY">
   <div className="upload-studio">
@@ -94,8 +99,15 @@ export function UploadStudio() {
     {tool === 'filters' && <div className="studio-filter-options">{(Object.keys(filters) as (keyof typeof filters)[]).map(f => <Button key={f} variant="outline" size="sm" aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</Button>)}</div>}
     {tool === 'trim' && <div className="studio-trim">{(['시작', '끝'] as const).map((label, i) => <label key={label}>{label} · {trim[i]?.toFixed(1)}s<input aria-label={label} type="range" min="0" max={duration} step="0.1" value={trim[i]} onChange={e => { const n = Number(e.target.value); setTrim(i === 0 ? [Math.min(n, trim[1] - .1), trim[1]] : [trim[0], Math.max(n, trim[0] + .1)]); }}/></label>)}</div>}
     {tool === 'bgm' && <Button variant="outline" aria-pressed={bgm} onClick={() => setBgm(!bgm)}><Music2 size={15}/>{bgm ? '✓ ' : ''}Midnight Escapement · Demo</Button>}
-    {media && <label className="offer-input"><span>시계 정보 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => setBaseId(e.target.value)}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label>}
-    <Button className="studio-primary" disabled={!media} onClick={publish}><Check size={16}/> 피드에 게시하기</Button>
+    {media && <section className="id-step" aria-label="AI Watch Identification">
+     <div className="id-head"><strong>AI Watch Identification</strong><small>DEMO · 추정치</small></div>
+     {idResult.status === 'size' && <div className="id-ask"><span>같은 디자인의 사이즈가 여러 개입니다. 케이스 사이즈를 선택하세요.</span><div>{idResult.sizes.map(z => <Button key={z} variant="outline" size="sm" onClick={() => setIdSize(z)}>{z} mm</Button>)}</div></div>}
+     {idResult.status === 'ref' && <div className="id-ask"><span>레퍼런스를 확정할 수 없습니다. 케이스백·보증서로 확인 후 선택하세요.</span><div>{idResult.refs.map(x => <Button key={x} variant="outline" size="sm" onClick={() => setIdRef(x)}>Ref. {x}</Button>)}<Button variant="ghost" size="sm" onClick={() => setIdRef(UNCONFIRMED)}>확인 불가 · Unconfirmed</Button></div></div>}
+     {idResult.status === 'resolved' && <dl className="id-review" aria-label="게시 전 검토">{([['Brand', idResult.identity.brand], ['Model', idResult.identity.model], ['Reference', idResult.identity.ref], ['Case size', idResult.identity.size ? `${idResult.identity.size} mm` : undefined], ['Dial', idResult.identity.variant?.dial], ['Bezel', idResult.identity.variant?.bezel], ['Case', idResult.identity.variant?.caseMaterial], ['Bracelet', idResult.identity.variant?.bracelet]] as const).map(([k, v]) => <div key={k}><dt>{k}</dt><dd className={v ? '' : 'id-unconfirmed'}>{v ?? 'Unconfirmed'}</dd></div>)}</dl>}
+     <label className="offer-input"><span>다른 시계로 변경 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => { setBaseId(e.target.value); setIdSize(undefined); setIdRef(undefined); }}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label>
+     <p className="studio-disclaimer">데모 식별 결과이며 실제 AI 분석·정품 감정이 아닙니다.</p>
+    </section>}
+    <Button className="studio-primary" disabled={!media || idResult.status !== 'resolved'} onClick={publish}><Check size={16}/> 피드에 게시하기</Button>
     <p className="studio-disclaimer">Display Only · 세션 내 게시 · BGM 오디오는 시뮬레이션입니다.</p>
    </>}
   </div>
