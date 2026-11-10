@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { WatchFeed } from '@/components/horology/feed';
 import { pageHead, type Watch } from '@/components/horology/data';
 import { useCommunity } from '@/components/horology/store';
-import { matchSameWatch } from '@/components/horology/same-watch';
+import { matchSameWatch, watchKey } from '@/components/horology/same-watch';
 
 export const Route = createFileRoute('/same-watch')({
   validateSearch: (s: Record<string, unknown>) => ({ brand: String(s['brand'] ?? ''), model: String(s['model'] ?? ''), ref: s['ref'] ? String(s['ref']) : undefined, size: s['size'] != null && Number.isFinite(Number(s['size'])) ? Number(s['size']) : undefined }),
@@ -21,11 +21,14 @@ function Tile({ w, onOpen }: { w: Watch; onOpen: (id: string) => void }) {
 
 function SameWatch() {
   const { brand, model, ref, size } = Route.useSearch();
-  const { posts } = useCommunity();
+  const { posts, followedWatches, toggleWatchFollow } = useCommunity();
+  const key = watchKey(brand, ref, size);
+  const following = !!key && followedWatches.includes(key);
   const { exact, related } = matchSameWatch(posts, { brand, model, ref, size });
   const header = <header className="same-watch-header">
     <Button variant="ghost" size="icon" asChild><Link to="/" aria-label="Back"><ArrowLeft size={19} /></Link></Button>
     <div><small>{brand}</small><strong>{model}</strong><span>{[ref ? `Ref. ${ref}` : 'Reference unconfirmed', size && `${size} mm`].filter(Boolean).join(' · ')} · {exact.length} exact</span></div>
+    <Button variant="follow" className={`watch-follow ${following ? 'is-following' : ''}`} aria-pressed={following} disabled={!key} title={key ? undefined : 'Reference unconfirmed — cannot follow as an exact watch'} onClick={() => key && toggleWatchFollow(key)}>{following ? 'Following' : 'Follow Watch'}</Button>
   </header>;
   return <WatchFeed list={[...exact, ...related]} header={header} renderGrid={(_items: Watch[], onOpen: (id: string) => void) => <>
     <h2 className="same-watch-section">Exact Match <small>{exact.length}</small></h2>

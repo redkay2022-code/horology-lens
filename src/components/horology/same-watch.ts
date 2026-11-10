@@ -18,3 +18,10 @@ export function matchSameWatch(posts: Watch[], key: SameWatchKey): { exact: Watc
   const isExact = (p: Watch) => !!r && postRef(p) === r && (key.size == null || (p.identity?.size ?? p.diameter) === key.size);
   return { exact: family.filter(isExact), related: family.filter(p => !isExact(p)) };
 }
+
+/** Exact watch identity key (brand + confirmed reference + case size); null when the reference is Unconfirmed. */
+export function watchKey(brand: string, ref?: string, size?: number): string | null {
+  const r = normRef(ref); if (!r || !brand) return null;
+  return `${norm(brand)}|${r}|${size ?? ''}`;
+}
+export const postWatchKey = (p: Watch) => watchKey(p.brand, p.identity ? p.identity.ref : p.ref, p.identity?.size ?? (p.diameter || undefined));

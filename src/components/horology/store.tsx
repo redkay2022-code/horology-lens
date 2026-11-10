@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 type CommunityState = {
   liked: string[]; saved: string[]; followed: string[]; uploads: Watch[];
-  toggleLike: (id:string)=>void; toggleSave: (id:string)=>void; toggleFollow: (id:string)=>void;
+  toggleLike: (id:string)=>void; toggleSave: (id:string)=>void; toggleFollow: (id:string)=>void; followedWatches: string[]; toggleWatchFollow: (key:string)=>void;
   addUpload: (watch:Watch)=>void; openUpload: ()=>void; uploadOpen:boolean; closeUpload:()=>void;
   filter:string; setFilter:(filter:string)=>void;
   cleanView:boolean; setCleanView:(value:boolean)=>void;
@@ -21,6 +21,7 @@ export function HorologyProvider({children}:{children:ReactNode}) {
   const [liked,setLiked]=useState<string[]>([]);
   const [saved,setSaved]=useState<string[]>([]);
   const [followed,setFollowed]=useState<string[]>([]);
+  const [followedWatches,setFollowedWatches]=useState<string[]>([]);
   const [uploads,setUploads]=useState<Watch[]>([]);
   const [uploadOpen,setUploadOpen]=useState(false);
   const [filter,setFilter]=useState('For You');
@@ -62,6 +63,6 @@ export function HorologyProvider({children}:{children:ReactNode}) {
   const declineOffer=(watch:Watch,offerId:string)=>{if(watch.creator!==me)return;setAuctions(old=>{const c=old[watch.id];if(!c||c.accepted!==null)return old;return {...old,[watch.id]:{...c,offers:c.offers.map(x=>x.id===offerId&&x.status==='pending'?{...x,status:'declined'}:x)}}});};
   const sendMessage=(id:string,text:string)=>setAuctions(old=>{const a=old[id];const post=[...uploads,...auctionPosts].find(w=>w.id===id);if(!a||a.accepted===null||!text.trim()||(me!==a.buyer&&me!==post?.creator))return old;return {...old,[id]:{...a,messages:[...a.messages,{from:me,text:text.trim()}]}}});
   const toggle=(setter:React.Dispatch<React.SetStateAction<string[]>>, id:string)=>setter(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);
-  return <Community.Provider value={{liked,saved,followed,uploads,toggleLike:id=>toggle(setLiked,id),toggleSave:id=>toggle(setSaved,id),toggleFollow:id=>toggle(setFollowed,id),addUpload,uploadOpen,openUpload:()=>setUploadOpen(true),closeUpload:()=>setUploadOpen(false),filter,setFilter,cleanView,setCleanView,posts:[...uploads,...auctionPosts],auctions,now,offerWatch,openOffer:watch=>{if(watch.creator===me){toast.error(ownPostMessage);return;}if(canOffer(watch,auctions[watch.id],Date.now(),me))setOfferWatch(watch)},closeOffer:()=>setOfferWatch(null),submitOffer,simulateOutbid,acceptOffer,declineOffer,readNotes,markRead:ids=>setReadNotes(old=>[...new Set([...old,...ids])]),role,me,setRole,sendMessage}}>{children}</Community.Provider>;
+  return <Community.Provider value={{liked,saved,followed,uploads,toggleLike:id=>toggle(setLiked,id),toggleSave:id=>toggle(setSaved,id),toggleFollow:id=>toggle(setFollowed,id),followedWatches,toggleWatchFollow:key=>toggle(setFollowedWatches,key),addUpload,uploadOpen,openUpload:()=>setUploadOpen(true),closeUpload:()=>setUploadOpen(false),filter,setFilter,cleanView,setCleanView,posts:[...uploads,...auctionPosts],auctions,now,offerWatch,openOffer:watch=>{if(watch.creator===me){toast.error(ownPostMessage);return;}if(canOffer(watch,auctions[watch.id],Date.now(),me))setOfferWatch(watch)},closeOffer:()=>setOfferWatch(null),submitOffer,simulateOutbid,acceptOffer,declineOffer,readNotes,markRead:ids=>setReadNotes(old=>[...new Set([...old,...ids])]),role,me,setRole,sendMessage}}>{children}</Community.Provider>;
 }
 export function useCommunity(){const state=useContext(Community);if(!state)throw new Error('HorologyProvider is required');return state;}
