@@ -29,6 +29,13 @@
       "when": 1794322969872,
       "tag": "0003_watch_catalog_revoke_writes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794323486163,
+      "tag": "0004_owned_watches",
+      "breakpoints": true
     }
   ]
 }

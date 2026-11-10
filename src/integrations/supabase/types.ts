@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      owned_watches: {
+        Row: {
+          catalog_id: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          purchase_currency: string | null
+          purchase_price: number | null
+          purchased_on: string | null
+          unconfirmed_fields: Json | null
+          updated_at: string
+          visibility: Database["public"]["Enums"]["collection_visibility"]
+        }
+        Insert: {
+          catalog_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          purchase_currency?: string | null
+          purchase_price?: number | null
+          purchased_on?: string | null
+          unconfirmed_fields?: Json | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["collection_visibility"]
+        }
+        Update: {
+          catalog_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          purchase_currency?: string | null
+          purchase_price?: number | null
+          purchased_on?: string | null
+          unconfirmed_fields?: Json | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["collection_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owned_watches_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "watch_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owned_watches_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -132,6 +186,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       catalog_status: "draft" | "confirmed"
+      collection_visibility: "private" | "public"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -261,6 +316,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       catalog_status: ["draft", "confirmed"],
+      collection_visibility: ["private", "public"],
     },
   },
 } as const
