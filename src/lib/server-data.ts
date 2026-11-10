@@ -11,7 +11,7 @@ export const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'] as con
 export type ServerPost = {
   id: string; author_id: string; catalog_id: string | null; brand: string; model: string;
   reference: string | null; case_size_mm: number | null; caption: string; video_path: string;
-  created_at: string; author: { handle: string; display_name: string } | null; url: string | null;
+  created_at: string; author: { handle: string; display_name: string } | null;
 };
 
 const POST_COLS = 'id,author_id,catalog_id,brand,model,reference,case_size_mm,caption,video_path,created_at';
@@ -23,6 +23,48 @@ export function validateVideoFile(f: { type: string; size: number }): string | n
   if (f.size <= 0 || f.size > MAX_VIDEO_BYTES) return '영상은 100MB 이하여야 합니다.';
   return null;
 }
+
+/** Leading-bytes container check. Identifies the container only; it does not prove the video decodes. */
+export type VideoKind = 'mp4' | 'mov' | 'webm';
+export function sniffVideo(b: Uint8Array): VideoKind | null {
+  if (b.length >= 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return 'webm';
+  if (b.length < 12) return null;
+  const box = String.fromCharCode(b[4]!, b[5]!, b[6]!, b[7]!);
+  if (box === 'ftyp') return String.fromCharCode(b[8]!, b[9]!, b[10]!, b[11]!) === 'qt  ' ? 'mov' : 'mp4';
+  if (['moov', 'mdat', 'wide', 'free', 'skip', 'pnot'].includes(box)) return 'mov';
+  return null;
+}
+/** MP4 and MOV share the ISO-BMFF layout and are often mislabelled for each other, so they are accepted interchangeably. */
+export function signatureMatchesType(kind: VideoKind | null, type: string): boolean {
+  if (!kind) return false;
+  return type === 'video/webm' ? kind === 'webm' : kind === 'mp4' || kind === 'mov';
+}
+export async function validateVideoSignature(f: Blob): Promise<string | null> {
+  const basic = validateVideoFile(f);
+  if (basic) return basic;
+  const part = f.slice(0, 16);
+  const buf = typeof part.arrayBuffer === 'function' ? await part.arrayBuffer()
+    : await new Promise<ArrayBuffer>((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result as ArrayBuffer); r.onerror = () => no(r.error); r.readAsArrayBuffer(part); });
+  const head = new Uint8Array(buf);
+  return signatureMatchesType(sniffVideo(head), f.type) ? null : '영상 파일 형식을 확인할 수 없습니다. 손상되었거나 확장자만 바뀐 파일일 수 있습니다.';
+}
+
+/* Playback authorization is separate from post metadata: a signed URL is requested only for a video about to play. */
+export const SIGNED_URL_TTL_S = 3600;
+const URL_REUSE_MS = (SIGNED_URL_TTL_S - 5 * 60) * 1000; // reuse until 5 minutes before expiry
+export const playbackKey = (path: string) => ['playback', path] as const;
+export async function fetchPlaybackUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, SIGNED_URL_TTL_S);
+  if (error || !data?.signedUrl) throw error ?? new Error('playback unavailable');
+  return data.signedUrl;
+}
+export const playbackQuery = (path: string) => ({ queryKey: playbackKey(path), queryFn: () => fetchPlaybackUrl(path), staleTime: URL_REUSE_MS, gcTime: URL_REUSE_MS, retry: 1, refetchOnWindowFocus: false });
+export function usePlaybackUrl(path: string, enabled: boolean) {
+  return useQuery({ ...playbackQuery(path), enabled });
+}
+/** Fullscreen loading window: only the active post plays and only the next one preloads. */
+export type PlaybackMode = 'active' | 'preload' | 'idle';
+export const playbackMode = (i: number, active: number): PlaybackMode => (i === active ? 'active' : i === active + 1 ? 'preload' : 'idle');
 
 export type PublicProfile = { id: string; handle: string; display_name: string; avatar_url: string | null };
 
@@ -39,8 +81,6 @@ export function usePosts(filter: PostFilter = {}, enabled = true) {
   return useQuery({
     queryKey: ['posts', filter],
     enabled,
-    // Signed URLs last 1h; refetch before expiry so long sessions keep playing.
-    refetchInterval: 45 * 60_000,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<ServerPost[]> => {
       let q = supabase.from('posts').select(POST_COLS).order('created_at', { ascending: false }).limit(60);
@@ -53,10 +93,7 @@ export function usePosts(filter: PostFilter = {}, enabled = true) {
       const raw = (data ?? []) as unknown as Omit<ServerPost, 'url' | 'author'>[];
       if (!raw.length) return [];
       const authors = await fetchPublicProfiles(raw.map(r => r.author_id));
-      const rows = raw.map(r => ({ ...r, author: authors.get(r.author_id) ?? null }));
-      const { data: signed } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(rows.map(r => r.video_path), 3600);
-      const urls = new Map((signed ?? []).map(s => [s.path, s.signedUrl]));
-      return rows.map(r => ({ ...r, url: urls.get(r.video_path) ?? null }));
+      return raw.map(r => ({ ...r, author: authors.get(r.author_id) ?? null }));
     },
   });
 }
@@ -125,7 +162,7 @@ export async function toggleRow(table: 'post_likes' | 'post_saves' | 'collector_
 }
 
 export async function uploadPost(userId: string, file: File, meta: { caption: string; brand: string; model: string; reference: string | null; case_size_mm: number | null; catalog_id: string | null }) {
-  const bad = validateVideoFile(file);
+  const bad = await validateVideoSignature(file);
   if (bad) throw new Error(bad);
   const ext = file.type === 'video/webm' ? 'webm' : file.type === 'video/quicktime' ? 'mov' : 'mp4';
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
@@ -135,10 +172,31 @@ export async function uploadPost(userId: string, file: File, meta: { caption: st
   if (error) { await supabase.storage.from(MEDIA_BUCKET).remove([path]); throw error; }
 }
 
-export async function deletePost(p: ServerPost) {
-  const { error } = await supabase.from('posts').delete().eq('id', p.id);
+/** Storage remove() reports success with an empty list when nothing was deleted, so count the removed objects. */
+async function removeMedia(path: string): Promise<boolean> {
+  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).remove([path]);
+  return !error && (data?.length ?? 0) > 0;
+}
+const assertOwnPath = (path: string, userId: string) => {
+  if (!userId || !path.startsWith(`${userId}/`)) throw new Error('본인 게시물만 삭제할 수 있습니다.');
+};
+export type DeleteResult = { cleanup: 'ok' | 'failed' };
+/**
+ * Row first: removing the post revokes public playback immediately (storage access requires a referencing post),
+ * and a cleanup failure then leaves only an owner-readable file instead of a post pointing at missing media.
+ */
+export async function deletePost(p: Pick<ServerPost, 'id' | 'author_id' | 'video_path'>, userId: string): Promise<DeleteResult> {
+  if (p.author_id !== userId) throw new Error('본인 게시물만 삭제할 수 있습니다.');
+  assertOwnPath(p.video_path, userId);
+  const { error, count } = await supabase.from('posts').delete({ count: 'exact' }).eq('id', p.id);
   if (error) throw error;
-  await supabase.storage.from(MEDIA_BUCKET).remove([p.video_path]);
+  if (!count) throw new Error('게시물을 삭제하지 못했습니다.');
+  const ok = (await removeMedia(p.video_path)) || (await removeMedia(p.video_path));
+  return { cleanup: ok ? 'ok' : 'failed' };
+}
+export async function retryMediaCleanup(path: string, userId: string): Promise<boolean> {
+  assertOwnPath(path, userId);
+  return removeMedia(path);
 }
 
 export function useInvalidate() {

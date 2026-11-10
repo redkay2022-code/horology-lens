@@ -6,13 +6,14 @@ import { toast } from 'sonner';
 import { ArrowLeft, Bookmark, Check, Film, Heart, MessageCircle, Pencil, Plus, Send, Trash2, Watch as WatchIcon, Cog, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomSheet } from './sheets';
+import { PostGrid, PostVideo } from './server-video';
 import { useCommunity } from './store';
 import { useSession, useProfile } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { listConfirmedCatalog, type CatalogRecord } from '@/lib/catalog.functions';
 import { identifyWatch, type IdResult } from '@/lib/identify.functions';
 import { listMyWatches, addMyWatch, updateMyWatch, deleteMyWatch, type OwnedWatchInput } from '@/lib/collection.functions';
-import { usePosts, useLikes, useMyRows, useFollowCounts, useComments, toggleRow, uploadPost, deletePost, useInvalidate, validateVideoFile, type ServerPost, type PostFilter } from '@/lib/server-data';
+import { usePosts, useLikes, useMyRows, useFollowCounts, useComments, toggleRow, uploadPost, deletePost, retryMediaCleanup, useInvalidate, validateVideoSignature, playbackMode, type ServerPost, type PostFilter } from '@/lib/server-data';
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : '요청을 처리하지 못했습니다.');
 const label = (p: { brand: string; model: string }) => [p.brand, p.model].filter(Boolean).join(' ') || 'Untitled watch';
@@ -30,11 +31,12 @@ function SignInPrompt({ text }: { text: string }) {
 
 function Player({ posts, start, onClose }: { posts: ServerPost[]; start: number; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(start);
   useEffect(() => { ref.current?.children[start]?.scrollIntoView(); }, [start]);
-  return <div className="feed-page player-feed-page"><div className="snap-feed" ref={ref} tabIndex={0}>{posts.map(p => <ServerVideoPost key={p.id} post={p}/>)}</div><Button variant="ghost" size="icon" className="player-back" aria-label="Back to feed" onClick={onClose}><ArrowLeft size={20}/></Button></div>;
+  return <div className="feed-page player-feed-page"><div className="snap-feed" ref={ref} tabIndex={0}>{posts.map((p, i) => <ServerVideoPost key={p.id} post={p} index={i} mode={playbackMode(i, active)} onVisible={setActive}/>)}</div><Button variant="ghost" size="icon" className="player-back" aria-label="Back to feed" onClick={onClose}><ArrowLeft size={20}/></Button></div>;
 }
 
-function ServerVideoPost({ post }: { post: ServerPost }) {
+function ServerVideoPost({ post, index, mode, onVisible }: { post: ServerPost; index: number; mode: ReturnType<typeof playbackMode>; onVisible: (i: number) => void }) {
   const { user } = useSession();
   const inv = useInvalidate();
   const likes = useLikes([post.id]).data ?? [];
@@ -42,14 +44,12 @@ function ServerVideoPost({ post }: { post: ServerPost }) {
   const follows = useMyRows('collector_follows', user?.id).data ?? [];
   const watchFollows = useMyRows('watch_follows', user?.id).data ?? [];
   const [comments, setComments] = useState(false);
-  const video = useRef<HTMLVideoElement>(null);
-  const retried = useRef(false);
   const el = useRef<HTMLElement>(null);
   useEffect(() => {
     const node = el.current; if (!node) return;
-    const o = new IntersectionObserver(([e]) => { if (!video.current || !e) return; if (e.isIntersecting) void video.current.play().catch(() => {}); else video.current.pause(); }, { threshold: 0.6 });
+    const o = new IntersectionObserver(([e]) => { if (e?.isIntersecting) onVisible(index); }, { threshold: 0.6 });
     o.observe(node); return () => o.disconnect();
-  }, []);
+  }, [index, onVisible]);
   const liked = !!user && likes.some(l => l.user_id === user.id);
   const saved = saves.includes(post.id);
   const following = follows.includes(post.author_id);
@@ -60,7 +60,7 @@ function ServerVideoPost({ post }: { post: ServerPost }) {
   };
   const own = user?.id === post.author_id;
   return <article className="video-post" ref={el} aria-label={`${label(post)} video`}>
-    {post.url ? <video ref={video} className="watch-video" src={post.url} muted loop playsInline preload="metadata" controls={false} onError={() => { if (!retried.current) { retried.current = true; void inv('posts'); } else toast.error('영상을 재생할 수 없습니다. 형식(MOV 등)이 이 브라우저에서 지원되지 않거나 링크가 만료되었습니다.'); }} onLoadedData={() => { retried.current = false; }} onClick={e => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}/> : <div className="discover-empty"><Film/><p>Video unavailable</p></div>}
+    <PostVideo path={post.video_path} mode={mode}/>
     <div className="video-shade"/>
     <div className="video-actions">
       <div className="creator-follow"><Button variant="ghost" className="creator-avatar" asChild><Link to="/creator/$handle" params={{ handle: post.author?.handle ?? '' }} aria-label={`Open @${post.author?.handle} profile`}>{(post.author?.display_name || post.author?.handle || '?').slice(0, 2).toUpperCase()}</Link></Button>{!own && <Button variant="follow" size="icon" aria-label={following ? 'Unfollow creator' : 'Follow creator'} aria-pressed={following} className={following ? 'is-following' : ''} onClick={() => act('collector_follows', post.author_id, !following, ['collector_follows', 'follow-counts'])}>{following ? <Check/> : <Plus/>}</Button>}</div>
@@ -95,9 +95,6 @@ function ServerComments({ post, open, onClose }: { post: ServerPost; open: boole
   return <BottomSheet open={open} onClose={onClose} title={`${data.length} comments`}><div className="comments-list">{data.length ? data.map(c => <div className="comment-row" key={c.id}><span className="avatar-small">{(c.author?.handle ?? '?').slice(0, 2).toUpperCase()}</span><div><strong>@{c.author?.handle}</strong><p>{c.body}</p>{c.user_id === user?.id && <Button variant="ghost" size="sm" onClick={() => remove(c.id)}>Delete</Button>}</div></div>) : <p className="discovery-footer">Be the first to comment.</p>}</div><form className="comment-form" onSubmit={e => { e.preventDefault(); void submit(); }}><input aria-label="Write a comment" maxLength={500} placeholder={user ? 'Add to the conversation…' : 'Sign in to comment'} value={text} onChange={e => setText(e.target.value)} disabled={!user}/><Button type="submit" size="icon" disabled={!text.trim()} aria-label="Post comment"><Send/></Button></form></BottomSheet>;
 }
 
-function PostGrid({ posts, onOpen }: { posts: ServerPost[]; onOpen: (i: number) => void }) {
-  return <div className="feed-masonry" aria-label="Watch film grid">{[0, 1].map(col => <div className="feed-masonry-column" key={col}>{posts.map((p, i) => i % 2 === col ? <Button key={p.id} variant="feedTile" className={`tile-proportion-${i % 3}`} aria-label={`Watch ${label(p)}`} onClick={() => onOpen(i)}>{p.url && <video src={`${p.url}#t=0.1`} muted playsInline preload="metadata"/>}<span className="grid-watch-label"><small>{p.brand}</small><strong>{p.model || 'Untitled'}</strong></span></Button> : null)}</div>)}</div>;
-}
 
 export function ServerFeed() {
   const { user } = useSession();
@@ -156,7 +153,7 @@ export function ServerUploadSheet() {
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
   return <BottomSheet open={uploadOpen} onClose={closeUpload} title="Share a wrist story">{!user ? <SignInPrompt text="Sign in to upload a watch video."/> : <form className="profile-edit" onSubmit={e => { e.preventDefault(); void submit(); }}>
-    <label>Video (MP4/WebM/MOV, ≤100MB)<input type="file" accept="video/mp4,video/webm,video/quicktime" aria-label="Video file" onChange={e => { const f = e.target.files?.[0] ?? null; const bad = f && validateVideoFile(f); if (bad) { toast.error(bad); e.target.value = ''; setFile(null); } else setFile(f); }}/></label>
+    <label>Video (MP4/WebM/MOV, ≤100MB)<input type="file" accept="video/mp4,video/webm,video/quicktime" aria-label="Video file" onChange={async e => { const input = e.currentTarget; const f = input.files?.[0] ?? null; const bad = f && await validateVideoSignature(f); if (bad) { toast.error(bad); input.value = ''; setFile(null); } else setFile(f); }}/></label>
     {preview && <video src={preview} className="upload-preview" muted loop autoPlay playsInline style={{ width: '100%', maxHeight: 260, objectFit: 'contain' }}/>}
     <IdentifyPanel catalog={catalog} onPickCatalog={setCatalogId} onPickManual={c => { setCatalogId(''); setManual(c); }}/>
     <label>Confirmed model<select aria-label="Confirmed model" value={catalogId} onChange={e => setCatalogId(e.target.value)}><option value="">Not listed / unconfirmed</option>{catalog.map(c => <option key={c.id} value={c.id}>{c.brand} {c.model} · {c.reference} · {c.caseSizeMm}mm</option>)}</select></label>
@@ -245,7 +242,11 @@ export function ServerProfile() {
     if (error) { toast.error(error.message.includes('handle') || error.code === '23505' || error.code === '23514' ? '핸들은 3–30자 영문 소문자·숫자·._ 이며 중복될 수 없습니다.' : '프로필을 저장하지 못했습니다.'); return; }
     await inv('profile'); setEdit(false); toast.success('프로필이 저장되었습니다.');
   };
-  const removePost = async (p: ServerPost) => { try { await deletePost(p); await inv('posts'); toast.success('게시물이 삭제되었습니다.'); } catch (e) { toast.error(errMsg(e)); } };
+  const cleanupLater = (path: string) => toast.warning('게시물은 삭제되었지만 영상 파일 정리에 실패했습니다. 파일은 공개되지 않으며 본인만 접근할 수 있습니다.', { duration: 15000, action: { label: '다시 시도', onClick: () => { if (!user) return; void retryMediaCleanup(path, user.id).then(ok => ok ? toast.success('영상 파일을 정리했습니다.') : cleanupLater(path)); } } });
+  const removePost = async (p: ServerPost) => {
+    if (!user) return;
+    try { const r = await deletePost(p, user.id); await inv('posts'); if (r.cleanup === 'ok') toast.success('게시물이 삭제되었습니다.'); else cleanupLater(p.video_path); } catch (e) { toast.error(errMsg(e)); }
+  };
   const name = profile?.display_name || profile?.handle || '';
   return <div className="content-page watchbox-page">
     <div className="profile-top"><span className="eyebrow">MY CORNER OF HOROLOGY</span><Button variant="ghost" size="icon" aria-label="Settings" asChild><Link to="/settings"><Cog/></Link></Button><Button variant="ghost" size="icon" aria-label="Edit profile" onClick={() => setEdit(true)}><Pencil/></Button></div>
