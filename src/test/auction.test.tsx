@@ -20,6 +20,7 @@ describe('Session-only auction flow',()=>{
   act(()=>result.current.acceptOffer(rolex));
   expect(result.current.auctions[rolex.id]?.accepted).toBeNull();
   act(()=>result.current.submitOffer(rolex,16000));
+  act(()=>result.current.setRole('seller'));
   act(()=>result.current.acceptOffer(rolex));
   expect(result.current.auctions[rolex.id]?.accepted).toBe(16000);
   expect(canOffer(rolex,result.current.auctions[rolex.id],Date.now())).toBe(false);

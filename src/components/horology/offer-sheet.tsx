@@ -7,11 +7,10 @@ import { Switch } from '@/components/ui/switch';
 import { BottomSheet } from './sheets';
 import { money, type Watch } from './data';
 import { useCommunity } from './store';
-import { auctionDisclaimer, canOffer } from './auction';
-import { ChatLounge } from './chat-lounge';
+import { auctionDisclaimer, canOffer, myOffer, offerStatus } from './auction';
 
 export function OfferSheet({ watch, open, onClose }: { watch: Watch; open: boolean; onClose: () => void }) {
- const { auctions, now, submitOffer, simulateOutbid, acceptOffer, closeOffer }=useCommunity();const navigate=useNavigate();
+ const { auctions, now, submitOffer, simulateOutbid, me }=useCommunity();const navigate=useNavigate();
  const a=auctions[watch.id];
  const step=watch.auction?.increment??100;
  const top=a?.highest??watch.auction?.highest??0;
@@ -19,8 +18,7 @@ export function OfferSheet({ watch, open, onClose }: { watch: Watch; open: boole
  const [choice,setChoice]=useState<{base:number;amount:number}>({base:top,amount:min});
  const offer=choice.base===top?choice.amount:min;
  const choose=(amount:number)=>setChoice({base:top,amount});
- const leading=a?.mine!==null&&a?.mine===top;
- const eligible=canOffer(watch,a,now);
+ const eligible=canOffer(watch,a,now,me);const mine=myOffer(a,me);const status=a&&mine?offerStatus(mine,a,now):null;const leading=status==='Pending';
  const accepted=a?.accepted!=null;
  return <BottomSheet open={open} onClose={onClose} title="Silent Bid">
   <div className="offer-sheet">
@@ -31,10 +29,10 @@ export function OfferSheet({ watch, open, onClose }: { watch: Watch; open: boole
    {!accepted&&<><div className="offer-quick">{[100,500,1000].filter(n=>n>=step).map(n=><Button key={n} variant="outline" aria-pressed={offer===top+n} disabled={!eligible} onClick={()=>choose(top+n)}>+{money(n)}</Button>)}</div>
    <label className="offer-input"><span>Custom offer · USD</span><input type="number" inputMode="numeric" min={min} step="1" disabled={!eligible} value={offer} aria-label="Custom offer amount" onChange={e=>choose(Number(e.target.value))}/></label>
    <Button className="offer-submit" disabled={!eligible||!Number.isSafeInteger(offer)||offer<min} onClick={()=>{if(submitOffer(watch,offer))toast.success('Offer sent · seller notification simulated',{description:'Non-binding demo. No payment taken.'});else toast.error(`Minimum offer: ${money(min)}`)}}><Flame/>[ Submit {money(offer)} Offer ]</Button>
-   {a?.mine!=null&&<p className="offer-receipt">Your offer: {money(a.mine)} · {leading?'Awaiting seller acceptance':'Outbid'}</p>}
-   <div className="offer-sim"><label><Switch checked={a?.outbid??false} disabled={!eligible} onCheckedChange={on=>simulateOutbid(watch,on)}/>Simulate Outbid Event</label><Button variant="outline" size="sm" disabled={!eligible} onClick={()=>{if(!leading&&!submitOffer(watch,offer))return;acceptOffer(watch);closeOffer();toast.success('1:1 Chat Unlocked');void navigate({to:'/chat',search:{thread:watch.id}})}}>Accept Offer</Button></div>
+   {mine&&<p className="offer-receipt">Your offer: {money(mine.amount)} · {status}</p>}
+   <div className="offer-sim"><label><Switch checked={a?.outbid??false} disabled={!eligible} onCheckedChange={on=>simulateOutbid(watch,on)}/>Simulate Outbid Event</label></div>
    <p className="offer-locked"><Lock size={13}/>{eligible?'Private 1:1 chat unlocks after seller acceptance.':'This auction has ended.'}</p></>}
-   {accepted&&<><div className="accepted-notice"><BadgeCheck size={16}/>Offer accepted · Private lounge unlocked</div><ChatLounge watch={watch}/></>}
+   {accepted&&(a?.buyer===me?<><div className="accepted-notice"><BadgeCheck size={16}/>Offer accepted · Private lounge unlocked</div><Button className="offer-submit" onClick={()=>void navigate({to:'/chat',search:{thread:watch.id}})}>Open 1:1 Chat</Button></>:<p className="offer-locked"><Lock size={13}/>{mine?`Your offer: ${status}`:'Offers closed'} · seller accepted another offer</p>)}
    <p className="auction-disclaimer">{auctionDisclaimer}</p><p className="auction-disclaimer">All offers, notifications, acceptance and messages are simulated for this session. No payments or escrow.</p>
   </div>
  </BottomSheet>;

@@ -8,11 +8,26 @@ export const auctionPosts: Watch[] = [
   { ...watches[1], model: 'Royal Oak Jumbo', ref: '16202ST', creator: 'WatchLover99', initials: 'WL', is_live_verified: false, caption: 'Petite Tapisserie. Extraordinary finishing.\nFrom my gallery · Display Only.', diameter: 39, thickness: 8.1, movement: 'Caliber 7121', reserve: 55, details: { ...watches[1].details, overview: 'The original Royal Oak transformed luxury watchmaking in 1972. The 16202ST Jumbo preserves its slender 39 mm proportions and Petite Tapisserie dial with the modern self-winding Caliber 7121.', caliber: 'In-house Caliber 7121 (Automatic)', powerReserve: 'Approximately 55 hours', jewels: 33, dialFinish: 'Blue Petite Tapisserie dial with luminescent markers' }, auction: undefined },
   ...extraFeedPosts,
 ];
-export type AuctionState = { highest: number; count: number; mine: number | null; accepted: number | null; endsAt: number; outbid: boolean; messages: { from: 'me' | 'seller'; text: string }[] };
+export type OfferStatus = 'Pending' | 'Outbid' | 'Accepted' | 'Declined' | 'Expired';
+export type Offer = { id: string; buyer: string; amount: number; status: 'pending' | 'accepted' | 'declined' };
+export type AuctionState = { highest: number; count: number; mine: number | null; accepted: number | null; endsAt: number; outbid: boolean; offers: Offer[]; buyer: string | null; chatId: string | null; messages: { from: string; text: string }[] };
+// DEMO accounts only — a local role toggle, not authentication or authorization.
+export const demoAccounts = { buyer: 'alex.morgan', seller: 'SubmarinerKing' } as const;
+export type DemoRole = keyof typeof demoAccounts;
+export const ownPostMessage = '내 게시물에는 오퍼를 보낼 수 없습니다. (DEMO)';
+export function offerStatus(offer: Offer, state: AuctionState, now: number): OfferStatus {
+  if (offer.status === 'accepted') return 'Accepted';
+  if (offer.status === 'declined') return 'Declined';
+  if (state.endsAt <= now) return 'Expired';
+  return offer.amount === state.highest ? 'Pending' : 'Outbid';
+}
+export function myOffer(state: AuctionState | undefined, user: string) {
+  return state?.offers.filter(o => o.buyer === user).at(-1);
+}
 export const displayOnlyMessage = '소유자 라이브 인증을 완료한 게시물만 오퍼를 받을 수 있습니다.';
 export const auctionDisclaimer = 'WRISTORY는 대화 연결 매개체일 뿐 결제 및 중개를 담당하지 않으며, 거래 책임을 지지 않습니다.';
-export function canOffer(watch: Watch, state: AuctionState | undefined, now: number) {
-  return watch.is_live_verified === true && !!state && state.endsAt > now && state.accepted === null;
+export function canOffer(watch: Watch, state: AuctionState | undefined, now: number, user?: string) {
+  return watch.creator !== user && watch.is_live_verified === true && !!state && state.endsAt > now && state.accepted === null;
 }
 export function countdown(seconds: number) {
   const value = Math.max(0, Math.floor(seconds));
