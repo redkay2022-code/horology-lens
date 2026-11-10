@@ -19,6 +19,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SameWatchRouteImport } from './routes/same-watch'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WatchboxRouteImport } from './routes/watchbox'
+import { Route as CreatorHandleRouteImport } from './routes/creator.$handle'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +71,11 @@ const WatchboxRoute = WatchboxRouteImport.update({
   path: '/watchbox',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreatorHandleRoute = CreatorHandleRouteImport.update({
+  id: '/creator/$handle',
+  path: '/creator/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/same-watch': typeof SameWatchRoute
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
+  '/creator/$handle': typeof CreatorHandleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/same-watch': typeof SameWatchRoute
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
+  '/creator/$handle': typeof CreatorHandleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/same-watch': typeof SameWatchRoute
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
+  '/creator/$handle': typeof CreatorHandleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/same-watch'
     | '/settings'
     | '/watchbox'
+    | '/creator/$handle'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/same-watch'
     | '/settings'
     | '/watchbox'
+    | '/creator/$handle'
   id:
     | '__root__'
     | '/'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/same-watch'
     | '/settings'
     | '/watchbox'
+    | '/creator/$handle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +170,7 @@ export interface RootRouteChildren {
   SameWatchRoute: typeof SameWatchRoute
   SettingsRoute: typeof SettingsRoute
   WatchboxRoute: typeof WatchboxRoute
+  CreatorHandleRoute: typeof CreatorHandleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchboxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creator/$handle': {
+      id: '/creator/$handle'
+      path: '/creator/$handle'
+      fullPath: '/creator/$handle'
+      preLoaderRoute: typeof CreatorHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,6 +266,7 @@ const rootRouteChildren: RootRouteChildren = {
   SameWatchRoute: SameWatchRoute,
   SettingsRoute: SettingsRoute,
   WatchboxRoute: WatchboxRoute,
+  CreatorHandleRoute: CreatorHandleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
