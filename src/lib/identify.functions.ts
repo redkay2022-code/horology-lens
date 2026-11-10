@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 // identity is assigned. This is NOT authenticity verification.
 
 export type IdCandidate = { brand: string; model: string; reference: string | null; confidence: number };
-export type IdResult = { candidates: IdCandidate[]; matches: { catalogId: string; candidateIndex: number }[]; error?: string };
+export type IdResult = { candidates: IdCandidate[]; matches: { catalogId: string; candidateIndex: number }[]; error?: string; limited?: 'minute' | 'day' };
 
 const MAX_IMAGE_CHARS = 7_000_000; // ~5MB base64
 
@@ -19,11 +19,11 @@ export function validateImageDataUrl(s: unknown): string {
 const norm = (s: string | null | undefined) => (s ?? '').toUpperCase().replace(/[\s.\-/]/g, '');
 
 /** Match candidates to confirmed catalog rows by brand + normalized reference only. Never by model name alone. */
-export function matchCandidates(cands: IdCandidate[], catalog: { id: string; brand: string; reference: string }[]) {
+export function matchCandidates(cands: IdCandidate[], catalog: { id: string; brand: string; reference: string | null; case_size_mm: number | null }[]) {
   const out: { catalogId: string; candidateIndex: number }[] = [];
   cands.forEach((c, i) => {
     if (!c.reference) return;
-    const hit = catalog.find(r => r.brand.trim().toLowerCase() === c.brand.trim().toLowerCase() && norm(r.reference) === norm(c.reference));
+    const hit = catalog.find(r => !!r.reference && !!r.case_size_mm && !!r.brand.trim() && r.brand.trim().toLowerCase() === c.brand.trim().toLowerCase() && norm(r.reference) === norm(c.reference));
     if (hit && !out.some(o => o.catalogId === hit.id)) out.push({ catalogId: hit.id, candidateIndex: i });
   });
   return out;
@@ -33,6 +33,10 @@ export const identifyWatch = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { image: string }) => ({ image: validateImageDataUrl(i.image) }))
   .handler(async ({ data, context }): Promise<IdResult> => {
+    const { data: quota, error: qErr } = await context.supabase.rpc('consume_ai_quota');
+    if (qErr) { console.error('ai quota error', qErr); return { candidates: [], matches: [], error: 'AI 식별을 지금 사용할 수 없습니다.' }; }
+    if (quota === 'minute') return { candidates: [], matches: [], error: 'AI 식별은 1분에 3회까지 가능합니다. 잠시 후 다시 시도하세요.', limited: 'minute' };
+    if (quota === 'day') return { candidates: [], matches: [], error: 'AI 식별은 하루 20회까지 가능합니다. 내일 다시 시도하세요.', limited: 'day' };
     const { generateResponse, GatewayError } = await import('@lovable.dev/ai-gateway');
     let candidates: IdCandidate[] = [];
     try {
@@ -60,6 +64,6 @@ export const identifyWatch = createServerFn({ method: 'POST' })
       console.error('identifyWatch failed', e instanceof GatewayError ? { code: e.code, status: e.httpStatus } : e);
       return { candidates: [], matches: [], error: 'AI 식별을 지금 사용할 수 없습니다. 직접 선택해 주세요.' };
     }
-    const { data: catalog } = await context.supabase.from('watch_catalog').select('id,brand,reference').eq('status', 'confirmed');
-    return { candidates, matches: matchCandidates(candidates, (catalog ?? []) as { id: string; brand: string; reference: string }[]) };
+    const { data: catalog } = await context.supabase.from('watch_catalog').select('id,brand,reference,case_size_mm').eq('status', 'confirmed');
+    return { candidates, matches: matchCandidates(candidates, (catalog ?? []) as { id: string; brand: string; reference: string | null; case_size_mm: number | null }[]) };
   });

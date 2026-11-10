@@ -43,6 +43,7 @@ function ServerVideoPost({ post }: { post: ServerPost }) {
   const watchFollows = useMyRows('watch_follows', user?.id).data ?? [];
   const [comments, setComments] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
+  const retried = useRef(false);
   const el = useRef<HTMLElement>(null);
   useEffect(() => {
     const node = el.current; if (!node) return;
@@ -59,7 +60,7 @@ function ServerVideoPost({ post }: { post: ServerPost }) {
   };
   const own = user?.id === post.author_id;
   return <article className="video-post" ref={el} aria-label={`${label(post)} video`}>
-    {post.url ? <video ref={video} className="watch-video" src={post.url} muted loop playsInline preload="metadata" controls={false} onError={() => toast.error('이 브라우저에서 재생할 수 없는 영상 형식입니다 (MOV는 일부 브라우저 미지원).')} onClick={e => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}/> : <div className="discover-empty"><Film/><p>Video unavailable</p></div>}
+    {post.url ? <video ref={video} className="watch-video" src={post.url} muted loop playsInline preload="metadata" controls={false} onError={() => { if (!retried.current) { retried.current = true; void inv('posts'); } else toast.error('영상을 재생할 수 없습니다. 형식(MOV 등)이 이 브라우저에서 지원되지 않거나 링크가 만료되었습니다.'); }} onLoadedData={() => { retried.current = false; }} onClick={e => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}/> : <div className="discover-empty"><Film/><p>Video unavailable</p></div>}
     <div className="video-shade"/>
     <div className="video-actions">
       <div className="creator-follow"><Button variant="ghost" className="creator-avatar" asChild><Link to="/creator/$handle" params={{ handle: post.author?.handle ?? '' }} aria-label={`Open @${post.author?.handle} profile`}>{(post.author?.display_name || post.author?.handle || '?').slice(0, 2).toUpperCase()}</Link></Button>{!own && <Button variant="follow" size="icon" aria-label={following ? 'Unfollow creator' : 'Follow creator'} aria-pressed={following} className={following ? 'is-following' : ''} onClick={() => act('collector_follows', post.author_id, !following, ['collector_follows', 'follow-counts'])}>{following ? <Check/> : <Plus/>}</Button>}</div>
@@ -125,7 +126,7 @@ function IdentifyPanel({ catalog, onPickCatalog, onPickManual }: { catalog: Cata
   return <div className="details-extra" aria-label="AI watch identification">
     <label>Identify from a photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Watch photo" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) void run(f); }}/></label>
     {busy && <small>Identifying…</small>}
-    {res && !res.error && (res.candidates.length ? res.candidates.map((c, i) => { const m = res.matches.find(x => x.candidateIndex === i); const rec = m && catalog.find(r => r.id === m.catalogId); return <div key={i}><small>AI 추정 후보 · {Math.round(c.confidence * 100)}%</small><strong>{c.brand} {c.model}{c.reference ? ` · ${c.reference}` : ''}</strong>{rec ? <Button type="button" size="sm" variant="outline" onClick={() => onPickCatalog(rec.id)}>Confirm: {rec.reference} · {rec.caseSizeMm}mm</Button> : <Button type="button" size="sm" variant="ghost" onClick={() => onPickManual({ brand: c.brand, model: c.model, reference: c.reference ?? '' })}>Use as unconfirmed</Button>}</div>; }) : <small>No watch recognised. Choose manually.</small>)}
+    {res && !res.error && (res.candidates.length ? res.candidates.map((c, i) => { const m = res.matches.find(x => x.candidateIndex === i); const rec = m && catalog.find(r => r.id === m.catalogId); return <div key={i}><small>AI 추정 후보 · {Math.round(c.confidence * 100)}%</small><strong>{c.brand} {c.model}{c.reference ? ` · ${c.reference}` : ''}</strong>{rec && rec.reference && rec.caseSizeMm ? <Button type="button" size="sm" variant="outline" onClick={() => onPickCatalog(rec.id)}>Confirm: {rec.reference} · {rec.caseSizeMm}mm</Button> : <Button type="button" size="sm" variant="ghost" onClick={() => onPickManual({ brand: c.brand, model: c.model, reference: c.reference ?? '' })}>Use as unconfirmed</Button>}</div>; }) : <small>No watch recognised. Choose manually.</small>)}
     <small className="demo-label">AI 추정 결과이며 진품·소유 인증이 아닙니다 · 사진은 저장되지 않습니다</small>
   </div>;
 }
