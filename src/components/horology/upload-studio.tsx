@@ -31,6 +31,7 @@ export function UploadStudio() {
  const [duration, setDuration] = useState(6);
  const [trim, setTrim] = useState<[number, number]>([0, 6]);
   const [baseId,setBaseId]=useState(watches[0].id);
+  const [changeOpen,setChangeOpen]=useState(false);
   const [idSize,setIdSize]=useState<number|undefined>();const [idRef,setIdRef]=useState<string|undefined>();
   const [missionTime,setMissionTime]=useState('04:20');
  const input = useRef<HTMLInputElement>(null);
@@ -55,7 +56,7 @@ export function UploadStudio() {
   if (!file) return;
   if (!file.type.startsWith('video/')) { setError('영상 파일을 선택해주세요.'); return; }
   if (file.size > 200 * 1024 * 1024) { setError('200 MB 이하의 영상을 선택해주세요.'); return; }
-  setMedia(URL.createObjectURL(file)); setStage('preview'); setBaseId(watches[[...file.name].reduce((a, ch) => a + ch.charCodeAt(0), 0) % watches.length]!.id); setIdSize(undefined); setIdRef(undefined); setError('');
+  setMedia(URL.createObjectURL(file)); setStage('preview'); setBaseId(watches[[...file.name].reduce((a, ch) => a + ch.charCodeAt(0), 0) % watches.length]!.id); setIdSize(undefined); setIdRef(undefined); setChangeOpen(false); setError('');
  };
  const publish = () => {
    if (stage !== 'preview' || (mode === 'gallery' && !media) || idResult.status !== 'resolved') return;
@@ -76,13 +77,13 @@ export function UploadStudio() {
  };
 const idResult = resolveIdentity(baseId, idSize, idRef);
  const idStep = <section className="id-step" aria-label="AI Watch Identification">
-     <div className="id-head"><strong>AI Watch Identification</strong><small>DEMO · 추정치</small></div>
+     <div className="id-head"><strong>AI Watch Identification</strong><small>DEMO · 추정치 · 실제 AI·감정 아님</small></div>
      {idResult.status === 'size' && <div className="id-ask"><span>같은 디자인의 사이즈가 여러 개입니다. 케이스 사이즈를 선택하세요.</span><div>{idResult.sizes.map(z => <Button key={z} variant="outline" size="sm" onClick={() => setIdSize(z)}>{z} mm</Button>)}</div></div>}
      {idResult.status === 'ref' && <div className="id-ask"><span>레퍼런스를 확정할 수 없습니다. 케이스백·보증서로 확인 후 선택하세요.</span><div>{idResult.refs.map(x => <Button key={x} variant="outline" size="sm" onClick={() => setIdRef(x)}>Ref. {x}</Button>)}<Button variant="ghost" size="sm" onClick={() => setIdRef(UNCONFIRMED)}>확인 불가 · Unconfirmed</Button></div></div>}
      {idResult.status === 'resolved' && <dl className="id-review" aria-label="게시 전 검토">{([['Brand', idResult.identity.brand], ['Model', idResult.identity.model], ['Reference', idResult.identity.ref], ['Case size', idResult.identity.size ? `${idResult.identity.size} mm` : undefined], ['Dial', idResult.identity.variant?.dial], ['Bezel', idResult.identity.variant?.bezel], ['Case', idResult.identity.variant?.caseMaterial], ['Bracelet', idResult.identity.variant?.bracelet]] as const).map(([k, v]) => <div key={k}><dt>{k}</dt><dd className={v ? '' : 'id-unconfirmed'}>{v ?? 'Unconfirmed'}</dd></div>)}</dl>}
-     <label className="offer-input"><span>다른 시계로 변경 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => { setBaseId(e.target.value); setIdSize(undefined); setIdRef(undefined); }}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label>
-     <p className="studio-disclaimer">데모 식별 결과이며 실제 AI 분석·정품 감정이 아닙니다.</p>
+     {changeOpen ? <label className="offer-input"><span>다른 시계로 변경 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => { setBaseId(e.target.value); setIdSize(undefined); setIdRef(undefined); setChangeOpen(false); }}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label> : <Button variant="link" size="sm" className="id-change" onClick={() => setChangeOpen(true)}>다른 시계로 변경</Button>}
     </section>;
+ const stepIndex = stage !== 'preview' || (mode === 'gallery' && !media) ? 0 : idResult.status === 'resolved' ? 2 : 1;
  const livePreview = mode === 'live' && stage === 'preview';
  return <BottomSheet open={uploadOpen} onClose={close} title="WRISTORY">
   <div className="upload-studio">
@@ -90,7 +91,7 @@ const idResult = resolveIdentity(baseId, idSize, idRef);
     <Button variant="ghost" role="tab" aria-selected={mode === 'live'} onClick={() => switchMode('live')}>🔴 라이브 소유 인증<small>Live Time Challenge</small></Button>
     <Button variant="ghost" role="tab" aria-selected={mode === 'gallery'} onClick={() => switchMode('gallery')}>📁 갤러리/일반<small>Gallery Upload</small></Button>
    </div>
-   <div className="studio-heading"><span>{mode === 'live' ? 'LIVE TIME CHALLENGE' : 'GALLERY UPLOAD'}</span><small>{stage === 'preview' ? 'PREVIEW' : '01 / CAPTURE'}</small></div>
+   <div className="studio-heading"><span>{mode === 'live' ? 'LIVE TIME CHALLENGE' : 'GALLERY UPLOAD'}</span><ol className="studio-steps" aria-label="진행 단계">{(['Capture', 'Identify', 'Review', 'Publish'] as const).map((l, i) => <li key={l} aria-current={i === stepIndex ? 'step' : undefined} className={i < stepIndex ? 'is-done' : ''}>{l}</li>)}</ol></div>
    <section className="studio-viewfinder" aria-label={mode === 'live' ? 'Simulated camera viewfinder' : 'Gallery video preview'}>
     {mode === 'live' || media ? <video key={`${mode}-${media}-${stage === 'preview'}`} ref={video} src={mode === 'live' ? watches[0].video : media} poster={watches[0].image} autoPlay loop muted playsInline controls={stage === 'preview'} style={{ filter: mode === 'gallery' ? filters[filter] : undefined }} onLoadedMetadata={e => { if (mode !== 'gallery') return; const d = e.currentTarget.duration; if (Number.isFinite(d) && d > 0) { setDuration(d); setTrim([0, d]); } }} onTimeUpdate={e => { if (mode === 'gallery' && (e.currentTarget.currentTime >= trim[1] || e.currentTarget.currentTime < trim[0])) e.currentTarget.currentTime = trim[0]; }} /> : <div className="studio-empty"><Film size={36}/><span>당신의 시계, 당신의 이야기.</span><small>MP4 · MOV · WEBM / 200 MB</small></div>}
     {mode === 'live' && stage !== 'preview' && <><div className="studio-camera-label"><span className="studio-live-dot"/> SIMULATED LIVE<Camera size={14}/></div><div className="studio-reticle"><i/><i/><i/><i/></div><div className="studio-frame-note">{stage === 'armed' ? `${missionTime} · ✌️ · 3초 촬영` : '시계를 프레임 중앙에 맞춰주세요'}</div></>}
@@ -104,7 +105,7 @@ const idResult = resolveIdentity(baseId, idSize, idRef);
     {(stage === 'armed' || stage === 'recording') && <div className="studio-record-controls"><span>{missionTime} + ✌️</span><Button variant="ghost" className={`studio-record-button ${stage === 'recording' ? 'is-recording' : ''}`} aria-label="3초 촬영 시작" disabled={stage === 'recording'} onClick={() => { setRecording(3); setStage('recording'); }}><i/></Button><span>3 SEC</span></div>}
     {stage === 'armed' && <Button variant="ghost" className="studio-retake" onClick={reset}><X size={14}/> 미션 취소</Button>}
     {livePreview && <>{idStep}<Button variant="ghost" className="studio-retake" onClick={() => { setStage('ready'); setExpires(null); }}><RotateCcw size={14}/> 다시 촬영</Button><Button className="studio-primary" disabled={idResult.status !== 'resolved'} onClick={publish}><Check size={16}/> 인증 숏폼 게시하기</Button></>}
-    <p className="studio-disclaimer">데모 카메라 · 소유 인증 및 서버 토큰은 시뮬레이션입니다.</p>
+    <p className="studio-disclaimer">데모 카메라 · 소유 인증은 시뮬레이션입니다.</p>
    </> : <>
     <input ref={input} type="file" accept="video/*" hidden onChange={e => choose(e.target.files?.[0])}/>
     <Button variant="outline" className="studio-picker" onClick={() => input.current?.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); choose(e.dataTransfer.files[0]); }}>📁 갤러리에서 영상 선택하기</Button>
@@ -114,7 +115,7 @@ const idResult = resolveIdentity(baseId, idSize, idRef);
     {tool === 'bgm' && <Button variant="outline" aria-pressed={bgm} onClick={() => setBgm(!bgm)}><Music2 size={15}/>{bgm ? '✓ ' : ''}Midnight Escapement · Demo</Button>}
     {media && idStep}
     <Button className="studio-primary" disabled={!media || idResult.status !== 'resolved'} onClick={publish}><Check size={16}/> 피드에 게시하기</Button>
-    <p className="studio-disclaimer">Display Only · 세션 내 게시 · BGM 오디오는 시뮬레이션입니다.</p>
+    <p className="studio-disclaimer">Display Only · BGM은 시뮬레이션입니다.</p>
    </>}
   </div>
   <Dialog.Root open={mission} onOpenChange={o => { setMission(o); if (!o && stage === 'ready') { setExpires(null); setRemaining(180); } }}><Dialog.Portal><Dialog.Overlay className="studio-mission-backdrop"/><Dialog.Content className="studio-mission" aria-describedby="mission-description"><div className="studio-mission-top"><Target size={23}/><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="미션 닫기"><X size={17}/></Button></Dialog.Close></div><Dialog.Title>🎯 실시간 소유 인증 미션</Dialog.Title><p className="studio-mission-subtitle">LIVE TIME CHALLENGE / DEMO</p><div className="studio-mission-box" id="mission-description">시계 바늘을 <strong>[ {missionTime} ]</strong>에 맞추고,<br/>손가락 ✌️(V)를 한 채<br/><strong>3초간 촬영하세요.</strong></div><div className="studio-mission-clock"><Clock3 size={17}/><strong>{`${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`}</strong><span>미션 유효 시간</span></div><Button className="studio-primary" onClick={() => { setMission(false); setStage('armed'); }}><Camera size={16}/> 미션 시작 및 촬영</Button><p className="studio-disclaimer">실제 카메라·서버 검증 없이 진행되는 데모입니다.</p></Dialog.Content></Dialog.Portal></Dialog.Root>
