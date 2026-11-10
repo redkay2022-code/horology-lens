@@ -14,6 +14,7 @@ import { Route as ActiveBidsRouteImport } from './routes/active-bids'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MultiImagePreviewRouteImport } from './routes/multi-image-preview'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecognitionPreviewRouteImport } from './routes/recognition-preview'
@@ -45,6 +46,11 @@ const DiscoverRoute = DiscoverRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MultiImagePreviewRoute = MultiImagePreviewRouteImport.update({
+  id: '/multi-image-preview',
+  path: '/multi-image-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
   '/login': typeof LoginRoute
+  '/multi-image-preview': typeof MultiImagePreviewRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/recognition-preview': typeof RecognitionPreviewRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
   '/login': typeof LoginRoute
+  '/multi-image-preview': typeof MultiImagePreviewRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/recognition-preview': typeof RecognitionPreviewRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
   '/login': typeof LoginRoute
+  '/multi-image-preview': typeof MultiImagePreviewRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/recognition-preview': typeof RecognitionPreviewRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/discover'
     | '/login'
+    | '/multi-image-preview'
     | '/notifications'
     | '/profile'
     | '/recognition-preview'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/discover'
     | '/login'
+    | '/multi-image-preview'
     | '/notifications'
     | '/profile'
     | '/recognition-preview'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/discover'
     | '/login'
+    | '/multi-image-preview'
     | '/notifications'
     | '/profile'
     | '/recognition-preview'
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   DiscoverRoute: typeof DiscoverRoute
   LoginRoute: typeof LoginRoute
+  MultiImagePreviewRoute: typeof MultiImagePreviewRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   RecognitionPreviewRoute: typeof RecognitionPreviewRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/multi-image-preview': {
+      id: '/multi-image-preview'
+      path: '/multi-image-preview'
+      fullPath: '/multi-image-preview'
+      preLoaderRoute: typeof MultiImagePreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -281,6 +301,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   DiscoverRoute: DiscoverRoute,
   LoginRoute: LoginRoute,
+  MultiImagePreviewRoute: MultiImagePreviewRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   RecognitionPreviewRoute: RecognitionPreviewRoute,

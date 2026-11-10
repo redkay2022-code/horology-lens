@@ -39,3 +39,4 @@
 
 - Keep G1 behind a development-build plus explicit query opt-in, with a separate mock draft and no publication callback; this prevents preview identities or editorial placeholders from entering real post writes.
 - G1 mock adapters import no Gateway or server runtime and story panels are metadata-only siblings of video; this preserves network isolation and playback identity.
+- Keep G3 real contracts separate from G1, its authenticated endpoint unconditionally disabled with no provider/quota import, and its development workspace local mock-only; header screening cannot authorize inference without full decoding and ingress protection.

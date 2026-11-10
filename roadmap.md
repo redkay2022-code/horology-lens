@@ -1,4 +1,7 @@
 # Horology
+- [x] G3-D: separate strict real contract and dependency-free image screening; real inference disabled
+- [x] G3-D: authenticated fail-closed function and isolated network-free development workspace
+- [x] G3-D: full regression tests, automatic type/build checks, mobile isolation verification and CTO report
 - [x] G1: strict contracts and network-free mock adapters
 - [x] G1: bounded automatic preparation and correction-safe confirmation
 - [x] G1: isolated development upload and read-only story preview
