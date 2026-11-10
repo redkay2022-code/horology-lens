@@ -9,12 +9,12 @@ const empty = { catalogId: '', brand: '', model: '', reference: '' };
 
 describe('catalog matching & confirmation', () => {
   it('single confident catalog match fills catalog-only values', () => {
-    const r = resolveIdentification({ candidates: [cand('Rolex', 'Sub', '126610LN', 0.9)], matches: [{ catalogId: 'c1', candidateIndex: 0 }] }, catalog);
-    expect(r.kind).toBe('confident');
-    if (r.kind === 'confident') expect(optionToWatch(r.option)).toEqual({ catalogId: 'c1', brand: 'Rolex', model: 'Submariner', reference: '126610LN' });
+    const r = resolveIdentification({ candidates: [cand('Rolex', 'Submariner', '126610LN', 0.9)], matches: [{ catalogId: 'c1', candidateIndex: 0 }] }, catalog);
+    expect(r.kind).toBe('confirm');
+    if (r.kind === 'confirm') expect(optionToWatch(r.option)).toEqual({ catalogId: 'c1', brand: 'Rolex', model: 'Submariner', reference: '126610LN' });
   });
   it('ignores matches to rows without a verified size or unknown ids', () => {
-    const r = resolveIdentification({ candidates: [cand('Rolex', 'Sub', '16610', 0.9)], matches: [{ catalogId: 'nosize', candidateIndex: 0 }] }, catalog);
+    const r = resolveIdentification({ candidates: [cand('Rolex', 'Submariner', '16610', 0.9)], matches: [{ catalogId: 'nosize', candidateIndex: 0 }] }, catalog);
     expect(r.kind).toBe('confirm'); if (r.kind === 'confirm') expect(r.option.catalog).toBeNull();
   });
   it('asks which reference when several catalog rows match (max 3 options)', () => {
@@ -28,7 +28,7 @@ describe('catalog matching & confirmation', () => {
   it('unmatched result needs confirmation; empty or low confidence asks for a clearer frame', () => {
     expect(resolveIdentification({ candidates: [cand('Omega', 'Speedmaster', null, 0.9)], matches: [] }, catalog).kind).toBe('confirm');
     expect(resolveIdentification({ candidates: [], matches: [] }, catalog).kind).toBe('none');
-    expect(resolveIdentification({ candidates: [cand('Omega', 'Speedmaster', null, 0.3)], matches: [] }, catalog).kind).toBe('none');
+    expect(resolveIdentification({ candidates: [cand('Omega', 'Speedmaster', null, 0.3)], matches: [] }, catalog).kind).toBe('confirm');
   });
   it('passes through rate limits and failures as errors', () => {
     expect(resolveIdentification({ candidates: [], matches: [], error: 'x', limited: 'minute' }, catalog)).toEqual({ kind: 'error', message: 'x', limited: 'minute' });
@@ -37,11 +37,11 @@ describe('catalog matching & confirmation', () => {
 
 describe('user input protection', () => {
   const s = { catalogId: 'c1', brand: 'Rolex', model: 'Submariner', reference: '126610LN' };
-  it('fills an untouched form', () => expect(mergeSuggestion(empty, new Set(), s, false).next).toEqual(s));
+  it('never attaches an exact reference automatically', () => expect(mergeSuggestion(empty, new Set(), s, false).next).toEqual(empty));
   it('never overwrites manually edited fields and does not attach catalog over them', () => {
     const cur = { ...empty, brand: 'Tudor' };
     const r = mergeSuggestion(cur, new Set(['brand']), s, false);
-    expect(r.next.brand).toBe('Tudor'); expect(r.next.catalogId).toBe(''); expect(r.next.model).toBe('Submariner');
+    expect(r.next.brand).toBe('Tudor'); expect(r.next.catalogId).toBe(''); expect(r.next.model).toBe('');
   });
   it('preserves a manually selected catalog entry', () => {
     const cur = { ...empty, catalogId: 'c2' };

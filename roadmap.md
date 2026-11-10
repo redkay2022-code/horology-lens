@@ -1,4 +1,7 @@
 # Horology
+- [x] V2-A: prepare complementary frames and manual dial crops without multi-image server activation
+- [x] V2-A: require identity confirmation, normalize references safely and protect manual identity atomically
+- [x] V2-A: deterministic tests, mobile checks, type/build validation and candidate commit; do not deploy
 - [x] Implement metallic primary controls and premium server creation forms without backend changes
 - [x] Verify creation chooser, safe collection-to-post fields and existing regression tests
 - [x] Capture mobile before/after and record candidate and validation limitations; do not deploy
