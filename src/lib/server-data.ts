@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Server-mode data layer. All reads/writes go through the browser client so RLS
 // (owner-scoped writes, public post reads) is the security boundary.
 
+import { signPlaybackUrls } from './playback.functions';
 export const MEDIA_BUCKET = 'post-media';
 export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 export const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'] as const;
@@ -57,10 +58,11 @@ const URL_REUSE_MS = (SIGNED_URL_TTL_S - 5 * 60) * 1000; // reuse until 5 minute
 export const playbackKey = (path: string) => ['playback', path] as const;
 export async function fetchPlaybackUrl(path: string): Promise<string> {
   markPlayback('url-req', path);
-  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, SIGNED_URL_TTL_S);
+  const data = await signPlaybackUrls({ data: { paths: [path] } });
   markPlayback('url-res', path);
-  if (error || !data?.signedUrl) throw error ?? new Error('playback unavailable');
-  return data.signedUrl;
+  const url = data.find(r => r.path === path)?.signedUrl;
+  if (!url) throw new Error('playback unavailable');
+  return url;
 }
 export const playbackQuery = (path: string) => ({ queryKey: playbackKey(path), queryFn: () => fetchPlaybackUrl(path), staleTime: URL_REUSE_MS, gcTime: URL_REUSE_MS, retry: 1, refetchOnWindowFocus: false });
 /** Lightweight stage marks (performance.mark only) used to diagnose interaction-to-first-frame latency. */
@@ -77,10 +79,9 @@ export async function prefetchPlaybackUrls(qc: QueryClient, paths: string[]): Pr
   if (!todo.length) return 0;
   todo.forEach(p => inflight.add(p));
   try {
-    const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(todo, SIGNED_URL_TTL_S);
-    if (error || !data) return 0;
+    const data = await signPlaybackUrls({ data: { paths: todo, batch: true } }).catch(() => []);
     let n = 0;
-    for (const r of data) if (r.path && r.signedUrl && !r.error) { qc.setQueryData(playbackKey(r.path), r.signedUrl); n++; }
+    for (const r of data) { qc.setQueryData(playbackKey(r.path), r.signedUrl); n++; }
     return n;
   } finally { todo.forEach(p => inflight.delete(p)); }
 }
@@ -113,16 +114,15 @@ export function usePosts(filter: PostFilter = {}, enabled = true) {
     enabled,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<ServerPost[]> => {
-      let q = supabase.from('posts').select(POST_COLS).order('created_at', { ascending: false }).limit(filter.limit ?? 60);
-      if (filter.authorId) q = q.eq('author_id', filter.authorId);
-      if (filter.authorIds) q = q.in('author_id', filter.authorIds.length ? filter.authorIds : ['00000000-0000-0000-0000-000000000000']);
-      if (filter.catalogIds) q = q.in('catalog_id', filter.catalogIds.length ? filter.catalogIds : ['00000000-0000-0000-0000-000000000000']);
-      if (filter.brand) q = q.ilike('brand', safeTerm(filter.brand));
-      if (filter.tag) q = q.ilike('caption', `%#${safeTerm(filter.tag.replace(/^#/, ''))}%`);
-      if (filter.search) { const t = safeTerm(filter.search); if (t) q = q.or(`brand.ilike.%${t}%,model.ilike.%${t}%,reference.ilike.%${t}%,caption.ilike.%${t}%`); }
-      if (filter.since) q = q.gte('created_at', filter.since);
-      if (filter.ids) q = q.in('id', filter.ids.length ? filter.ids : ['00000000-0000-0000-0000-000000000000']);
-      const { data, error } = await q;
+      const t = filter.search ? safeTerm(filter.search) : '';
+      const args = Object.fromEntries(Object.entries({
+        _author_ids: filter.authorId ? [filter.authorId] : filter.authorIds ?? undefined,
+        _catalog_ids: filter.catalogIds ?? undefined, _ids: filter.ids ?? undefined,
+        _brand: filter.brand ? safeTerm(filter.brand) : undefined,
+        _tag: filter.tag ? safeTerm(filter.tag.replace(/^#/, '')) : undefined,
+        _search: t || undefined, _since: filter.since ?? undefined, _limit: filter.limit ?? 60,
+      }).filter(([, v]) => v !== undefined));
+      const { data, error } = await supabase.rpc('get_feed', args);
       if (error) throw error;
       const raw = (data ?? []) as unknown as Omit<ServerPost, 'url' | 'author'>[];
       if (!raw.length) return [];
@@ -137,9 +137,11 @@ export function useLikes(postIds: string[]) {
     queryKey: ['likes', postIds],
     enabled: postIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from('post_likes').select('post_id,user_id').in('post_id', postIds);
+      const [{ data, error }, { data: auth }] = await Promise.all([supabase.rpc('get_like_summary', { _post_ids: postIds }), supabase.auth.getSession()]);
       if (error) throw error;
-      return data ?? [];
+      const me = auth.session?.user.id ?? '';
+      // Aggregates only: other likers stay anonymous; the caller's own like is marked with their id.
+      return (data ?? []).flatMap(r => Array.from({ length: Number(r.likes) }, (_, i) => ({ post_id: r.post_id, user_id: r.liked_by_me && i === 0 ? me : '' })));
     },
   });
 }
@@ -163,12 +165,10 @@ export function useFollowCounts(profileId: string | undefined) {
     queryKey: ['follow-counts', profileId],
     enabled: !!profileId,
     queryFn: async () => {
-      const [a, b] = await Promise.all([
-        supabase.from('collector_follows').select('*', { count: 'exact', head: true }).eq('followee_id', profileId!),
-        supabase.from('collector_follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileId!),
-      ]);
-      if (a.error || b.error) throw a.error ?? b.error;
-      return { followers: a.count ?? 0, following: b.count ?? 0 };
+      const { data, error } = await supabase.rpc('get_follow_counts', { _profile_id: profileId! });
+      if (error) throw error;
+      const r = data?.[0];
+      return { followers: Number(r?.followers ?? 0), following: Number(r?.following ?? 0) };
     },
   });
 }
@@ -178,7 +178,7 @@ export function useComments(postId: string, enabled: boolean) {
     queryKey: ['comments', postId],
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase.from('post_comments').select('id,body,created_at,user_id').eq('post_id', postId).order('created_at');
+      const { data, error } = await supabase.rpc('get_post_comments', { _post_id: postId });
       if (error) throw error;
       const authors = await fetchPublicProfiles((data ?? []).map(c => c.user_id));
       return (data ?? []).map(c => ({ ...c, author: authors.get(c.user_id) ?? null })) as { id: string; body: string; created_at: string; user_id: string; author: { handle: string } | null }[];

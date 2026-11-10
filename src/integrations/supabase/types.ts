@@ -436,6 +436,56 @@ export type Database = {
     }
     Functions: {
       consume_ai_quota: { Args: never; Returns: string }
+      get_feed: {
+        Args: {
+          _author_ids?: string[]
+          _brand?: string
+          _catalog_ids?: string[]
+          _ids?: string[]
+          _limit?: number
+          _search?: string
+          _since?: string
+          _tag?: string
+        }
+        Returns: {
+          author_id: string
+          brand: string
+          caption: string
+          case_size_mm: number
+          catalog_id: string
+          created_at: string
+          id: string
+          mime_type: string
+          model: string
+          reference: string
+          size_bytes: number
+          video_path: string
+        }[]
+      }
+      get_follow_counts: {
+        Args: { _profile_id: string }
+        Returns: {
+          followers: number
+          following: number
+        }[]
+      }
+      get_like_summary: {
+        Args: { _post_ids: string[] }
+        Returns: {
+          liked_by_me: boolean
+          likes: number
+          post_id: string
+        }[]
+      }
+      get_post_comments: {
+        Args: { _post_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          user_id: string
+        }[]
+      }
       get_public_profile_by_handle: {
         Args: { _handle: string }
         Returns: {

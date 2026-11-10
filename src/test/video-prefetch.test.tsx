@@ -3,6 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const m = vi.hoisted(() => ({ createSignedUrl: vi.fn(), createSignedUrls: vi.fn() }));
+vi.mock('@/lib/playback.functions', () => ({ signPlaybackUrls: async ({ data }: { data: { paths: string[]; batch?: boolean } }) => {
+  if (data.batch) { const r = await m.createSignedUrls(data.paths, 3600); return (r.data ?? []).filter((x: { signedUrl: string | null }) => x.signedUrl).map((x: { path: string; signedUrl: string }) => ({ path: x.path, signedUrl: x.signedUrl })); }
+  const r = await m.createSignedUrl(data.paths[0], 3600); if (r.error || !r.data?.signedUrl) throw r.error ?? new Error('x'); return [{ path: data.paths[0], signedUrl: r.data.signedUrl }];
+} }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ createSignedUrl: m.createSignedUrl, createSignedUrls: m.createSignedUrls }) } } }));
 
 import { prefetchPlaybackUrls, playbackKey, PREFETCH_LIMIT } from '@/lib/server-data';
