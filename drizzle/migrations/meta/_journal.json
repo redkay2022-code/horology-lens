@@ -57,6 +57,13 @@
       "when": 1794326573929,
       "tag": "0007_ai_usage_quota",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794332152518,
+      "tag": "0008_public_profile_projection",
+      "breakpoints": true
     }
   ]
 }

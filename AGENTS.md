@@ -28,3 +28,4 @@
 - Server-mode screens live in server-views.tsx and are swapped in per route via isDemoMode; demo components stay untouched so the two data sources never mix.
 - Posts/likes/saves/comments/follows are read and written through the browser client with RLS as the boundary (user columns default to auth.uid() and are never granted for insert); posts_guard forces author and author-folder video paths.
 - Post videos live in the private post-media bucket under <uid>/; playback uses short-lived signed URLs, readable only when a post references the file (workspace blocks public buckets).
+- Profiles rows are owner-only; other users and visitors read only handle, display name and photo via get_public_profiles/get_public_profile_by_handle, so bios and future private profile fields never leak.

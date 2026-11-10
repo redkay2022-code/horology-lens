@@ -260,7 +260,7 @@ export function ServerCreator({ handle }: { handle: string }) {
   const navigate = useNavigate();
   const { user } = useSession();
   const inv = useInvalidate();
-  const { data: profile, isLoading } = useQuery({ queryKey: ['profile-by-handle', handle], queryFn: async () => { const { data, error } = await supabase.from('profiles').select('id,handle,display_name,bio').eq('handle', handle).maybeSingle(); if (error) throw error; return data; } });
+  const { data: profile, isLoading } = useQuery({ queryKey: ['profile-by-handle', handle], queryFn: async () => { const { data, error } = await supabase.rpc('get_public_profile_by_handle', { _handle: handle }); if (error) throw error; return data?.[0] ?? null; } });
   const counts = useFollowCounts(profile?.id).data;
   const posts = usePosts({ authorId: profile?.id }, !!profile).data ?? [];
   const follows = useMyRows('collector_follows', user?.id).data ?? [];
@@ -269,6 +269,6 @@ export function ServerCreator({ handle }: { handle: string }) {
   const following = follows.includes(profile.id);
   const toggle = async () => { if (!user) { toast.info('로그인 후 팔로우할 수 있습니다.'); return; } try { await toggleRow('collector_follows', profile.id, !following, user.id); await inv('collector_follows', 'follow-counts'); } catch (e) { toast.error(errMsg(e)); } };
   return <div className="content-page watchbox-page"><div className="profile-top"><Button variant="ghost" size="icon" aria-label="Back" onClick={() => window.history.back()}><ArrowLeft/></Button></div>
-    <header className="profile-header"><span className="profile-avatar">{(profile.display_name || profile.handle).slice(0, 2).toUpperCase()}</span><h1>{profile.display_name || profile.handle}</h1><p className="profile-handle">@{profile.handle}</p>{profile.bio && <p className="profile-bio">{profile.bio}</p>}<div className="profile-stats"><div><strong>{posts.length}</strong><span>FILMS</span></div><i/><div><strong>{counts?.followers ?? '—'}</strong><span>FOLLOWERS</span></div><i/><div><strong>{counts?.following ?? '—'}</strong><span>FOLLOWING</span></div></div>{user?.id !== profile.id && <Button aria-pressed={following} onClick={() => void toggle()}>{following ? <><Check/> Following</> : <><Plus/> Follow</>}</Button>}</header>
+    <header className="profile-header"><span className="profile-avatar">{(profile.display_name || profile.handle).slice(0, 2).toUpperCase()}</span><h1>{profile.display_name || profile.handle}</h1><p className="profile-handle">@{profile.handle}</p><div className="profile-stats"><div><strong>{posts.length}</strong><span>FILMS</span></div><i/><div><strong>{counts?.followers ?? '—'}</strong><span>FOLLOWERS</span></div><i/><div><strong>{counts?.following ?? '—'}</strong><span>FOLLOWING</span></div></div>{user?.id !== profile.id && <Button aria-pressed={following} onClick={() => void toggle()}>{following ? <><Check/> Following</> : <><Plus/> Follow</>}</Button>}</header>
     <div className="section-heading"><h2>Wrist stories</h2><span>{posts.length} films</span></div><PostTiles posts={posts} empty="No films yet."/></div>;
 }

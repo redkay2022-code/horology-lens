@@ -436,6 +436,24 @@ export type Database = {
     }
     Functions: {
       consume_ai_quota: { Args: never; Returns: string }
+      get_public_profile_by_handle: {
+        Args: { _handle: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          handle: string
+          id: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: { _ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          handle: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

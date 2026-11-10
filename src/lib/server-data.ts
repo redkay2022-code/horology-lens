@@ -14,7 +14,7 @@ export type ServerPost = {
   created_at: string; author: { handle: string; display_name: string } | null; url: string | null;
 };
 
-const POST_COLS = 'id,author_id,catalog_id,brand,model,reference,case_size_mm,caption,video_path,created_at,author:profiles!posts_author_id_fkey(handle,display_name)';
+const POST_COLS = 'id,author_id,catalog_id,brand,model,reference,case_size_mm,caption,video_path,created_at';
 
 export type PostFilter = { authorId?: string | undefined; authorIds?: string[]; catalogIds?: string[]; ids?: string[] };
 
@@ -22,6 +22,17 @@ export function validateVideoFile(f: { type: string; size: number }): string | n
   if (!(VIDEO_TYPES as readonly string[]).includes(f.type)) return 'MP4, WebM 또는 MOV 영상만 업로드할 수 있습니다.';
   if (f.size <= 0 || f.size > MAX_VIDEO_BYTES) return '영상은 100MB 이하여야 합니다.';
   return null;
+}
+
+export type PublicProfile = { id: string; handle: string; display_name: string; avatar_url: string | null };
+
+/** Public profile fields only (handle, name, photo) via a narrow database function; profiles rows are owner-only. */
+export async function fetchPublicProfiles(ids: string[]): Promise<Map<string, PublicProfile>> {
+  const uniq = [...new Set(ids)];
+  if (!uniq.length) return new Map();
+  const { data, error } = await supabase.rpc('get_public_profiles', { _ids: uniq });
+  if (error) throw error;
+  return new Map((data ?? []).map(p => [p.id, p]));
 }
 
 export function usePosts(filter: PostFilter = {}, enabled = true) {
@@ -39,8 +50,10 @@ export function usePosts(filter: PostFilter = {}, enabled = true) {
       if (filter.ids) q = q.in('id', filter.ids.length ? filter.ids : ['00000000-0000-0000-0000-000000000000']);
       const { data, error } = await q;
       if (error) throw error;
-      const rows = (data ?? []) as unknown as Omit<ServerPost, 'url'>[];
-      if (!rows.length) return [];
+      const raw = (data ?? []) as unknown as Omit<ServerPost, 'url' | 'author'>[];
+      if (!raw.length) return [];
+      const authors = await fetchPublicProfiles(raw.map(r => r.author_id));
+      const rows = raw.map(r => ({ ...r, author: authors.get(r.author_id) ?? null }));
       const { data: signed } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(rows.map(r => r.video_path), 3600);
       const urls = new Map((signed ?? []).map(s => [s.path, s.signedUrl]));
       return rows.map(r => ({ ...r, url: urls.get(r.video_path) ?? null }));
@@ -94,9 +107,10 @@ export function useComments(postId: string, enabled: boolean) {
     queryKey: ['comments', postId],
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase.from('post_comments').select('id,body,created_at,user_id,author:profiles!post_comments_user_id_fkey(handle)').eq('post_id', postId).order('created_at');
+      const { data, error } = await supabase.from('post_comments').select('id,body,created_at,user_id').eq('post_id', postId).order('created_at');
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; body: string; created_at: string; user_id: string; author: { handle: string } | null }[];
+      const authors = await fetchPublicProfiles((data ?? []).map(c => c.user_id));
+      return (data ?? []).map(c => ({ ...c, author: authors.get(c.user_id) ?? null })) as { id: string; body: string; created_at: string; user_id: string; author: { handle: string } | null }[];
     },
   });
 }
