@@ -193,3 +193,19 @@ a.shorts-creator{color:inherit;text-decoration:none}
 .video-first-frame-cover { position: absolute; inset: 0; pointer-events: none; }
 .xhs-header .category-button.category-unavailable{opacity:.45}
 .feed-search-row{display:flex;align-items:center;gap:6px;margin-top:8px}.feed-search-input{flex:1;height:32px;border-radius:30px;border:1px solid color-mix(in oklch,var(--primary) 35%,transparent);background:color-mix(in oklch,var(--background) 65%,transparent);color:var(--foreground);font-size:12px;padding:0 14px;outline:none}.feed-search-input:focus{border-color:var(--primary)}
+.premium-menu{max-height:min(90dvh,90vh)!important;padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(180deg,var(--card),var(--background));overflow:hidden}
+.premium-menu[data-state=closed]{animation:pm-out .18s ease-in forwards}.sheet-backdrop[data-state=closed]{animation:fade-in .18s reverse forwards}
+@keyframes pm-out{to{transform:translate(-50%,40px);opacity:0}}
+.pm-header{display:flex;align-items:flex-start;justify-content:space-between;padding:6px 20px 16px;border-bottom:1px solid color-mix(in oklch,var(--primary) 22%,transparent);flex-shrink:0}
+.pm-wordmark{font-family:var(--font-display);font-weight:900;font-size:20px;letter-spacing:6px;color:var(--foreground);text-shadow:0 1px 2px var(--primary)}
+.pm-subtitle{margin-top:4px;font-size:8px;letter-spacing:3px;color:var(--primary)}
+.pm-close{width:44px;height:44px;margin:-6px -10px 0 0}
+.pm-scroll{overflow-y:auto;overscroll-behavior:contain;padding:6px 20px calc(20px + env(safe-area-inset-bottom));flex:1;min-height:0}
+.pm-section{padding:14px 0 6px}.pm-section+.pm-section{border-top:1px solid var(--border)}
+.pm-section h3{font-size:9px;letter-spacing:2.6px;color:var(--primary);margin:0 0 6px;font-weight:600}
+.pm-item{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;padding:6px 2px;color:var(--foreground);text-align:left;border-radius:8px;transition:background .15s}
+.pm-item:hover,.pm-item:focus-visible{background:color-mix(in oklch,var(--primary) 8%,transparent);outline:none}
+.pm-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid color-mix(in oklch,var(--primary) 35%,transparent);color:var(--primary);flex-shrink:0}
+.pm-label{flex:1;font-size:14px;letter-spacing:.3px}
+.pm-soon{font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted-foreground)}
+.pm-chevron{color:var(--muted-foreground)}

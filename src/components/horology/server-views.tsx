@@ -7,6 +7,7 @@ import { ArrowLeft, Bookmark, Check, ChevronRight, Film, Heart, Menu, MessageCir
 import { categories } from './data';
 import { Button } from '@/components/ui/button';
 import { BottomSheet } from './sheets';
+import { PremiumMenu } from './premium-menu';
 import { PostGrid, PostVideo, resetPreloadGate } from './server-video';
 import { useCommunity } from './store';
 import { useSession, useProfile } from '@/hooks/use-auth';
@@ -103,7 +104,6 @@ const HASHTAGS = ['#WOTD', '#Rolex', '#Submariner', '#Vintage'];
 /** Chips with a real data source: brand matches posts.brand exactly, hashtags match the literal tag in the caption. Others wait for real taxonomy. */
 const CHIP_BRANDS: Record<string, string> = { Rolex: 'Rolex' };
 const UNAVAILABLE = new Set(['Vintage', 'Microbrands', 'Complications', 'Lume Shots']);
-const MENU = [['/profile', 'Profile'], ['/notifications', 'Notifications'], ['/active-bids', 'Live Bids'], ['/chat', 'Chats'], ['/discover', 'Discover'], ['/settings', 'Settings'], ['/login', 'Account']] as const;
 const POPULAR_DAYS = 30;
 
 export function ServerFeed() {
@@ -139,7 +139,7 @@ export function ServerFeed() {
     {searching && <div className="xhs-row feed-search-row"><input className="feed-search-input" aria-label="Search brand, model, reference or caption" placeholder="브랜드 · 모델 · 레퍼런스 검색" value={query} maxLength={60} autoFocus onChange={e => setQuery(e.target.value)}/>{query && <Button variant="ghost" size="icon" aria-label="Clear search" onClick={() => setQuery('')}><X size={14}/></Button>}</div>}
   </header>
     <div className="feed-grid-scroll">{tab === 'Following' && !user ? <SignInPrompt text="Sign in to see collectors and watches you follow."/> : isLoading ? <p className="discovery-footer">Loading films…</p> : error ? <div className="empty-feed"><h2>Could not load films</h2><p>{errMsg(error)}</p></div> : posts.length ? <PostGrid posts={posts} onOpen={setOpen}/> : <div className="empty-feed follow-empty"><WatchIcon/><h2>{emptyTitle}</h2><p>{emptyText}</p>{(refined || tab !== 'For You') && <Button onClick={() => { setTab('For You'); setChip('For You'); setQuery(''); }}>Back to For You</Button>}</div>}</div>
-    <BottomSheet open={menu} onClose={() => setMenu(false)} title="Menu"><nav className="xhs-menu">{MENU.map(([to, l]) => <Button key={to} variant="outline" className="w-full" asChild><Link to={to}>{l}<ChevronRight/></Link></Button>)}</nav></BottomSheet>
+    <PremiumMenu open={menu} onClose={() => setMenu(false)} lang={lang} onFollowing={() => setTab('Following')}/>
   </div>;
 }
 
@@ -256,6 +256,13 @@ function PostTiles({ posts, empty }: { posts: ServerPost[]; empty: string }) {
   return posts.length ? <PostGrid posts={posts} onOpen={setOpen}/> : <div className="discover-empty"><Film/><p>{empty}</p></div>;
 }
 
+/** Reads ?tab= from the URL after hydration; works without a router context (tests). */
+export function useProfileTabParam() {
+  const [t, setT] = useState<string | null>(null);
+  useEffect(() => { const read = () => setT(new URLSearchParams(window.location.search).get('tab')); read(); const i = setInterval(read, 400); return () => clearInterval(i); }, []);
+  return t;
+}
+
 export function ServerProfile() {
   const { user, ready } = useSession();
   const { data: profile } = useProfile(user?.id);
@@ -264,7 +271,9 @@ export function ServerProfile() {
   const myPosts = usePosts({ authorId: user?.id }, !!user).data ?? [];
   const saved = usePosts({ ids: savedIds ?? [] }, !!savedIds).data ?? [];
   const inv = useInvalidate();
+  const initialTab = useProfileTabParam();
   const [tab, setTab] = useState('My Collection');
+  useEffect(() => { if (initialTab) setTab(initialTab === 'saved' ? 'Saved Videos' : 'My Collection'); }, [initialTab]);
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState({ display_name: '', handle: '', bio: '' });
   useEffect(() => { if (profile) setForm({ display_name: profile.display_name, handle: profile.handle, bio: profile.bio }); }, [profile]);
