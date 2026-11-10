@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { isDemoMode } from '@/lib/backend-mode';
+import { comingSoon } from '@/components/horology/store';
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, LockKeyhole, MessageCircle, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +14,7 @@ function ChatPage(){
  const accepted=posts.filter(w=>{const a=auctions[w.id];return a?.accepted!=null&&(a.buyer===me||w.creator===me)});
  const pending=posts.filter(w=>auctions[w.id]?.offers.some(o=>o.buyer===me&&o.status==='pending')&&auctions[w.id]?.accepted==null);
  const watch=accepted.find(w=>w.id===selected);
- return <div className="content-page chat-page"><header className="auction-header"><Link to="/" className="wordmark-logo">WRISTORY</Link><span className="auction-kicker">PRIVATE COLLECTOR LOUNGES</span><div className="auction-title"><h1>Chats<span>.</span></h1><MessageCircle size={22}/></div><p className="subtle">Where the next chapter begins.</p></header><p className="offer-alert chat-disclaimer" role="note">WRISTORY is a communication facilitator. All payments, inspections, and transfers occur off-platform directly between users.</p>
+ return <div className="content-page chat-page"><header className="auction-header"><Link to="/" className="wordmark-logo">WRISTORY</Link><span className="auction-kicker">PRIVATE COLLECTOR LOUNGES</span>{!isDemoMode&&<p className="offer-locked" role="status">{comingSoon}</p>}<div className="auction-title"><h1>Chats<span>.</span></h1><MessageCircle size={22}/></div><p className="subtle">Where the next chapter begins.</p></header><p className="offer-alert chat-disclaimer" role="note">WRISTORY is a communication facilitator. All payments, inspections, and transfers occur off-platform directly between users.</p>
   {watch?<><Button variant="ghost" onClick={()=>setSelected(null)} className="chat-back"><ChevronLeft/>All conversations</Button><ChatLounge watch={watch}/></>:<>
   {accepted.map(w=><Button className="conversation-row" variant="ghost" key={w.id} onClick={()=>setSelected(w.id)}><img src={w.image} alt={w.model}/><span><strong>@{w.creator===me?auctions[w.id]?.buyer:w.creator}</strong><small>{w.brand} {w.model}</small><em><CheckCheck size={12}/>Accepted · {money(auctions[w.id]?.accepted??0)}</em></span><ChevronRight/></Button>)}
   {!accepted.length&&<div className="chat-empty"><span><LockKeyhole size={28}/></span><h2>Your private lounge awaits.</h2><p>A conversation opens when a collector accepts your offer.</p><Button asChild variant="outline"><Link to="/active-bids">Explore Active Bids<ChevronRight/></Link></Button></div>}

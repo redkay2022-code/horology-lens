@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { isDemoMode } from '@/lib/backend-mode';
+import { comingSoon } from '@/components/horology/store';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { SpecSheet } from '@/components/horology/sheets';
@@ -17,7 +19,7 @@ function ActiveBids(){
  const relevant=posts.filter(w=>canOffer(w,auctions[w.id],now)||(w.is_live_verified&&!!myOffer(auctions[w.id],me)));
  const list=relevant.filter(w=>`${w.brand} ${w.model} ${w.ref} ${w.creator}`.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>{const x=auctions[a.id];const y=auctions[b.id];if(!x||!y)return 0;return sort==='popular'?y.count-x.count:sort==='highest'?y.highest-x.highest:x.endsAt-y.endsAt});
  return <div className="content-page auction-page">
-  <header className="auction-header"><Link to="/" className="wordmark-logo">WRISTORY</Link><span className="auction-kicker">THE COLLECTOR’S EXCHANGE</span><div className="auction-title"><h1>Active Bids<span>.</span></h1><span className="live-count"><i/>{active.length} LIVE</span></div><p className="subtle">Exceptional watches. A conversation away.</p></header>
+  <header className="auction-header"><Link to="/" className="wordmark-logo">WRISTORY</Link><span className="auction-kicker">THE COLLECTOR’S EXCHANGE</span>{!isDemoMode&&<p className="offer-locked" role="status">{comingSoon}</p>}<div className="auction-title"><h1>Active Bids<span>.</span></h1><span className="live-count"><i/>{active.length} LIVE</span></div><p className="subtle">Exceptional watches. A conversation away.</p></header>
   <label className="search-wrap"><Search/><input aria-label="Search active auctions" placeholder="Search watch, reference or collector" value={search} onChange={e=>setSearch(e.target.value)}/></label>
   <div className="auction-sort" role="tablist" aria-label="Auction sorting">{[{id:'closing',label:'Ending Soon'},{id:'popular',label:'Most Offers'},{id:'highest',label:'Highest Offer'}].map(s=><Button key={s.id} variant="ghost" role="tab" aria-selected={sort===s.id} onClick={()=>setSort(s.id)}>{s.label}</Button>)}</div>
   <div className="auction-section-heading"><span>{list.filter(w=>canOffer(w,auctions[w.id],now)).length} LIVE AUCTIONS</span><span>USD · NON-BINDING</span></div>
