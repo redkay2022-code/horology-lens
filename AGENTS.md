@@ -31,3 +31,6 @@
 - Profiles rows are owner-only; other users and visitors read only handle, display name and photo via get_public_profiles/get_public_profile_by_handle, so bios and future private profile fields never leak.
 - Server-mode video: grid cards never mount video; they batch-authorize signed URLs for at most four on-screen cards into the per-video playback cache, and fullscreen mounts only the active post plus one preload that attaches after the active first frame — keeps media downloads bounded and gives the chosen video first bandwidth.
 - deletePost removes the post row before the file and reports cleanup failure with an owner-only retry, because row removal revokes public access and a missing file must never leave a broken post.
+- Creation sheets use their own viewport-aware shell, not global BottomSheet changes, to keep unrelated drawers stable.
+- Collection-to-post selection uses an explicit identification-only projection with no collection ID or purchase fields, to preserve private data and avoid permanent links.
+- Primary button surfaces use shared static metallic tokens; non-button accents remain solid for readability and semantic states stay independent.

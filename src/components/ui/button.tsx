@@ -27,7 +27,8 @@ const buttonVariants = cva(
         feedTile: "feed-grid-tile",
         silentBid: "silent-bid",
         displayOnly: "display-only-button",
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        default: "metallic-button",
+        metallic: "metallic-button",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",

@@ -1,4 +1,7 @@
 # Horology
+- [x] Implement metallic primary controls and premium server creation forms without backend changes
+- [x] Verify creation chooser, safe collection-to-post fields and existing regression tests
+- [x] Capture mobile before/after and record candidate and validation limitations; do not deploy
 - [x] Remove ASMR, emphasize Clean View and verify three-column default Home
 - [x] Connect three conditional auction feed posts, shared bidding state and acceptance-unlocked chat
 - [x] Add Active Bids search, sorting, countdowns and Quick Offer
