@@ -16,6 +16,7 @@ import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RecognitionPreviewRouteImport } from './routes/recognition-preview'
 import { Route as SameWatchRouteImport } from './routes/same-watch'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WatchboxRouteImport } from './routes/watchbox'
@@ -56,6 +57,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecognitionPreviewRoute = RecognitionPreviewRouteImport.update({
+  id: '/recognition-preview',
+  path: '/recognition-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SameWatchRoute = SameWatchRouteImport.update({
   id: '/same-watch',
   path: '/same-watch',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/recognition-preview': typeof RecognitionPreviewRoute
   '/same-watch': typeof SameWatchRoute
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/recognition-preview': typeof RecognitionPreviewRoute
   '/same-watch': typeof SameWatchRoute
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/recognition-preview': typeof RecognitionPreviewRoute
   '/same-watch': typeof SameWatchRoute
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/profile'
+    | '/recognition-preview'
     | '/same-watch'
     | '/settings'
     | '/watchbox'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/profile'
+    | '/recognition-preview'
     | '/same-watch'
     | '/settings'
     | '/watchbox'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/notifications'
     | '/profile'
+    | '/recognition-preview'
     | '/same-watch'
     | '/settings'
     | '/watchbox'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  RecognitionPreviewRoute: typeof RecognitionPreviewRoute
   SameWatchRoute: typeof SameWatchRoute
   SettingsRoute: typeof SettingsRoute
   WatchboxRoute: typeof WatchboxRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recognition-preview': {
+      id: '/recognition-preview'
+      path: '/recognition-preview'
+      fullPath: '/recognition-preview'
+      preLoaderRoute: typeof RecognitionPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/same-watch': {
       id: '/same-watch'
       path: '/same-watch'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  RecognitionPreviewRoute: RecognitionPreviewRoute,
   SameWatchRoute: SameWatchRoute,
   SettingsRoute: SettingsRoute,
   WatchboxRoute: WatchboxRoute,

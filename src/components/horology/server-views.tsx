@@ -16,6 +16,9 @@ import { useSession, useProfile } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { listConfirmedCatalog, type CatalogRecord } from '@/lib/catalog.functions';
 import { VideoIdentifyPanel } from './video-identify';
+import { G1RecognitionPreview } from './g1-recognition-preview';
+import { WatchIntelligencePanel } from './watch-intelligence-panel';
+import { useG1Preview } from '@/lib/g1-preview';
 import { manualIdentityChange, mergeSuggestion, WATCH_FIELDS, type Provenance, type WatchField } from '@/lib/video-identify';
 import type { CreationWatch } from '@/lib/creation-watch';
 import { listMyWatches, addMyWatch, updateMyWatch, deleteMyWatch, type OwnedWatchInput } from '@/lib/collection.functions';
@@ -44,6 +47,7 @@ function Player({ posts, start, onClose }: { posts: ServerPost[]; start: number;
 }
 
 function ServerVideoPost({ post, index, mode, onVisible }: { post: ServerPost; index: number; mode: ReturnType<typeof playbackMode>; onVisible: (i: number) => void }) {
+  const g1Preview = useG1Preview();
   const { user } = useSession();
   const inv = useInvalidate();
   const likes = useLikes(mode === 'idle' ? [] : [post.id]).data ?? []; // off-screen posts skip like reads so they don't compete with the active video
@@ -80,6 +84,7 @@ function ServerVideoPost({ post, index, mode, onVisible }: { post: ServerPost; i
       {(post.reference || post.case_size_mm) ? <span className="shorts-ref">{[post.reference && `Ref. ${post.reference}`, post.case_size_mm && `${post.case_size_mm} mm`].filter(Boolean).join(' · ')}</span> : null}
       <Link className="shorts-creator" to="/creator/$handle" params={{ handle: post.author?.handle ?? '' }}>@{post.author?.handle}</Link>
       {post.caption && <p className="video-caption">{post.caption}</p>}
+      {g1Preview && <WatchIntelligencePanel preview/>}
       <div className="shorts-buttons">{post.catalog_id ? <Button variant="outline" aria-pressed={watchFollowed} onClick={() => act('watch_follows', post.catalog_id!, !watchFollowed, ['watch_follows'])}>{watchFollowed ? <Check size={13}/> : <Plus size={13}/>}{watchFollowed ? 'Following watch' : 'Follow Watch'}</Button> : <span className="shorts-closed">Unconfirmed model · watch follow unavailable</span>}</div>
     </div>
     <ServerComments post={post} open={comments} onClose={() => setComments(false)}/>
@@ -150,6 +155,7 @@ export function ServerFeed() {
 /* ---------------- Upload ---------------- */
 
 export function ServerUploadSheet() {
+  const g1Preview = useG1Preview();
   const { uploadOpen, closeUpload } = useCommunity();
   const { user } = useSession();
   const catalog = useCatalog().data ?? [];
@@ -193,7 +199,7 @@ export function ServerUploadSheet() {
     <section className="creation-section"><h3><Film/>{t('손목 위의 순간', 'A moment on your wrist')}</h3><input ref={fileRef} className="sr-only" type="file" accept="video/mp4,video/webm,video/quicktime" aria-label="Video file" onChange={async e => { const input = e.currentTarget; const f = input.files?.[0] ?? null; const ticket = ++selection.current; setChecking(true); const bad = f && await validateVideoSignature(f); if (ticket !== selection.current) return; if (bad) { toast.error(bad); input.value = ''; setFile(null); } else setFile(f); setChecking(false); }}/>
     {preview && <video src={preview} className="creation-video" muted loop autoPlay playsInline controls/>}<Button type="button" variant="outline" className={`creation-video-picker ${file ? 'has-video' : ''}`} disabled={checking} onClick={() => fileRef.current?.click()}><Film/><strong>{checking ? t('영상 확인 중…', 'Checking video…') : file ? file.name : t('영상 선택', 'Choose a video')}</strong><span>{file ? t('다른 영상 선택', 'Choose another video') : 'MP4 · WebM · MOV / 100 MiB'}</span></Button></section>
     <WatchIdentification catalog={catalog} lang={lang} value={watch} onChange={userChange} collection={<label className="creation-label">{t('내 컬렉션에서 선택', 'Choose from my collection')}<select aria-label="Existing collection watch" value="" disabled={owned.isLoading || !!owned.error} onChange={e => { const w = owned.data?.find(x => x.id === e.target.value); if (w) { WATCH_FIELDS.forEach(f => touched.current.add(f)); commit(collectionIdentification(w), WATCH_FIELDS, 'user'); } }}><option value="">{owned.isLoading ? t('불러오는 중…', 'Loading…') : owned.error ? t('컬렉션을 불러오지 못했습니다', 'Could not load collection') : t('시계 선택 (선택 사항)', 'Select a watch (optional)')}</option>{(owned.data ?? []).map(w => { const safe = collectionIdentification(w); const c = catalog.find(x => x.id === safe.catalogId); return <option key={w.id} value={w.id}>{c ? `${c.brand} ${c.model} · ${c.reference}` : [safe.brand, safe.model, safe.reference].filter(Boolean).join(' · ')}</option>; })}</select></label>}/>
-    <section className="creation-section"><VideoIdentifyPanel file={file} lang={lang} catalog={catalog} onSuggest={applyAi} identity={watch} enabled={uploadOpen && !busy && !checking}/><div className="prov-row" aria-label="Field sources">{(['brand', 'model', 'reference'] as const).map(f => { const p: Provenance = !watch.catalogId && !watch[f] ? 'unknown' : watch.catalogId ? (prov.catalogId === 'user' ? 'user' : 'catalog') : prov[f]; return <span key={f} data-p={p}>{[t('브랜드', 'Brand'), t('모델', 'Model'), t('레퍼런스', 'Reference')][['brand', 'model', 'reference'].indexOf(f)]} · {{ ai: t('AI 추정', 'AI estimate'), catalog: t('카탈로그 등록 정보', 'Catalog record'), user: t('사용자 확인', 'User confirmed'), unknown: t('알 수 없음', 'Unknown') }[p]}</span>; })}<span data-p={watch.catalogId ? 'catalog' : 'unknown'}>{t('케이스', 'Case')} · {watch.catalogId ? t('카탈로그 등록 정보', 'Catalog record') : t('알 수 없음', 'Unknown')}</span></div></section>
+    <section className="creation-section">{g1Preview ? <G1RecognitionPreview file={file} session={user?.id ?? 'anonymous'} enabled={uploadOpen && !busy && !checking}/> : <VideoIdentifyPanel file={file} lang={lang} catalog={catalog} onSuggest={applyAi} identity={watch} enabled={uploadOpen && !busy && !checking}/>}<div className="prov-row" aria-label="Field sources">{(['brand', 'model', 'reference'] as const).map(f => { const p: Provenance = !watch.catalogId && !watch[f] ? 'unknown' : watch.catalogId ? (prov.catalogId === 'user' ? 'user' : 'catalog') : prov[f]; return <span key={f} data-p={p}>{[t('브랜드', 'Brand'), t('모델', 'Model'), t('레퍼런스', 'Reference')][['brand', 'model', 'reference'].indexOf(f)]} · {{ ai: t('AI 추정', 'AI estimate'), catalog: t('카탈로그 등록 정보', 'Catalog record'), user: t('사용자 확인', 'User confirmed'), unknown: t('알 수 없음', 'Unknown') }[p]}</span>; })}<span data-p={watch.catalogId ? 'catalog' : 'unknown'}>{t('케이스', 'Case')} · {watch.catalogId ? t('카탈로그 등록 정보', 'Catalog record') : t('알 수 없음', 'Unknown')}</span></div></section>
     <section className="creation-section"><h3>{t('시계 이야기', 'Your wrist story')}</h3><label className="creation-label">{t('캡션 (선택)', 'Caption (optional)')}<textarea aria-label="Caption" maxLength={1000} placeholder={t('오늘 이 시계를 선택한 이유는 무엇인가요?', 'What made this your watch today?')} value={caption} onChange={e => setCaption(e.target.value)}/></label><small className="creation-count">{caption.length} / 1000</small></section>
   </fieldset><CreationFooter busy={busy} disabled={!file || checking} lang={lang} text={t('영상 게시', 'Publish')}/></form>}</CreationSheet>;
 }

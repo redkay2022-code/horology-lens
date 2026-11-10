@@ -1,4 +1,8 @@
 # Horology
+- [x] G1: strict contracts and network-free mock adapters
+- [x] G1: bounded automatic preparation and correction-safe confirmation
+- [x] G1: isolated development upload and read-only story preview
+- [x] G1: regression/mobile/isolation checks and candidate report; no deployment
 - [x] V2-A: prepare complementary frames and manual dial crops without multi-image server activation
 - [x] V2-A: require identity confirmation, normalize references safely and protect manual identity atomically
 - [x] V2-A: deterministic tests, mobile checks, type/build validation and candidate commit; do not deploy

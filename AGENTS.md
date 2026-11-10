@@ -36,3 +36,6 @@
 - Primary button surfaces use shared static metallic tokens; non-button accents remain solid for readability and semantic states stay independent.
 - Recognition prepares human-labelled complementary frames locally and sends only one explicitly selected image to the unchanged identifyWatch; multi-image contracts stay mock-only until separately approved.
 - Treat watch identity as an atomic group, revalidate brand/model/full reference with brand-specific normalization, require user selection for every AI candidate and explicit consent before replacing edited identity; confidence cannot authorize catalog attachment.
+
+- Keep G1 behind a development-build plus explicit query opt-in, with a separate mock draft and no publication callback; this prevents preview identities or editorial placeholders from entering real post writes.
+- G1 mock adapters import no Gateway or server runtime and story panels are metadata-only siblings of video; this preserves network isolation and playback identity.
