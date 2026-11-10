@@ -22,7 +22,7 @@
 - Use react-zoom-pan-pinch on the existing video element for macro inspection, with local per-post transforms and shared clean-view state, so gestures remain bounded and playback never remounts on entry or exit.
 
 - Auth identity comes from Lovable Cloud sessions; roles live only in user_roles (checked via has_role) and profile column grants limit edits, so privileges can never be self-assigned.
-- isDemoMode (VITE_BACKEND_MODE != server) gates the DEMO role switcher; mock community state stays the default until server adapters replace it per feature.
+- isDemoMode (true only when VITE_BACKEND_MODE=demo; server mode is the default) gates the DEMO role switcher; mock community state stays the default until server adapters replace it per feature.
 - watch_catalog is written only by service_role/migrations; anon/authenticated get SELECT only and RLS exposes confirmed rows — the catalog is a reference list, not ownership proof.
 - owned_watches: owner_id is forced from auth.uid() by trigger and never accepted from clients; only owner-scoped RLS exists (no public SELECT), so purchase data stays private even when visibility becomes public.
 - Server-mode screens live in server-views.tsx and are swapped in per route via isDemoMode; demo components stay untouched so the two data sources never mix.
