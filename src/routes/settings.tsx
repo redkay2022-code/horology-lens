@@ -1,3 +1,5 @@
+import { isDemoMode } from '@/lib/backend-mode';
+import { ServerSettings } from '@/components/horology/server-pages';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -7,7 +9,7 @@ import { BottomSheet } from '@/components/horology/sheets';
 import { auctionDisclaimer } from '@/components/horology/auction';
 import { useCommunity } from '@/components/horology/store';
 
-export const Route=createFileRoute('/settings')({head:()=>pageHead('Settings','Demo account, privacy, notification and safety settings for the WRISTORY prototype.'),component:Settings});
+export const Route=createFileRoute('/settings')({head:()=>pageHead('Settings',isDemoMode?'Demo account, privacy, notification and safety settings for the WRISTORY prototype.':'Account, privacy and notification settings for WRISTORY.'),component:isDemoMode?Settings:ServerSettings});
 const sections:Record<string,string>={
  Account:'Demo accounts only. Sign-in and account management are not connected yet (준비 중).',
  Privacy:'Profile visibility controls are coming soon (준비 중). Nothing is stored beyond this session.',

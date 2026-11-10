@@ -1,3 +1,5 @@
+import { isDemoMode } from '@/lib/backend-mode';
+import { ServerNotifications } from '@/components/horology/server-pages';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Bell, CheckCheck, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,7 +7,7 @@ import { money, pageHead } from '@/components/horology/data';
 import { useCommunity } from '@/components/horology/store';
 import { offerStatus } from '@/components/horology/auction';
 
-export const Route=createFileRoute('/notifications')({head:()=>pageHead('Notifications','Session-only demo alerts for new offers, outbids, accepted offers and private messages.'),component:Notifications});
+export const Route=createFileRoute('/notifications')({head:()=>pageHead('Notifications',isDemoMode?'Session-only demo alerts for new offers, outbids, accepted offers and private messages.':'Your WRISTORY notifications.'),component:isDemoMode?Notifications:ServerNotifications});
 type Note={id:string;title:string;body:string;thread?:string};
 function Notifications(){
  const {posts,auctions,now,me,readNotes,markRead}=useCommunity();

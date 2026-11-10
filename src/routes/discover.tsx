@@ -1,3 +1,5 @@
+import { isDemoMode } from '@/lib/backend-mode';
+import { ServerDiscover } from '@/components/horology/server-pages';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Search, SlidersHorizontal, ArrowUpRight, Play, X, Sparkles } from 'lucide-react';
@@ -5,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { watches, pageHead, compact, type Watch } from '@/components/horology/data';
 import { SpecSheet } from '@/components/horology/sheets';
 import { useCommunity } from '@/components/horology/store';
-export const Route=createFileRoute('/discover')({head:()=>pageHead('Discover the details','Explore watch films by wrist size, diameter, dial, movement and brand. Discover community rituals and horological icons.'),component:Discover});
+export const Route=createFileRoute('/discover')({head:()=>pageHead('Discover the details','Explore watch films by wrist size, diameter, dial, movement and brand. Discover community rituals and horological icons.'),component:isDemoMode?Discover:ServerDiscover});
 function Discover(){
  const [query,setQuery]=useState('');const [showFilters,setShowFilters]=useState(false);const [brand,setBrand]=useState('All');const [movement,setMovement]=useState('All');const [dial,setDial]=useState('All');const [diameter,setDiameter]=useState(44);const [wrist,setWrist]=useState('All');const [focus,setFocus]=useState(false);const {setFilter}=useCommunity();const [detail,setDetail]=useState<Watch|null>(null);const navigate=useNavigate();
  const filtered=watches.filter(w=>`${w.brand} ${w.model} ${w.ref} ${w.tags}`.toLowerCase().includes(query.toLowerCase())&&(brand==='All'||w.brand===brand)&&(movement==='All'||w.type===movement)&&(dial==='All'||w.dial===dial)&&w.diameter<=diameter&&(wrist==='All'||(wrist==='Small'?w.wrist<17:wrist==='Medium'?w.wrist>=17&&w.wrist<18:w.wrist>=18)));
