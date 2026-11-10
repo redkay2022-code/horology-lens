@@ -16,7 +16,9 @@ export type ServerPost = {
 
 const POST_COLS = 'id,author_id,catalog_id,brand,model,reference,case_size_mm,caption,video_path,created_at';
 
-export type PostFilter = { authorId?: string | undefined; authorIds?: string[]; catalogIds?: string[]; ids?: string[] };
+export type PostFilter = { authorId?: string | undefined; authorIds?: string[]; catalogIds?: string[]; ids?: string[]; brand?: string; tag?: string; search?: string; since?: string; limit?: number };
+/** Strips PostgREST filter syntax so user text can only ever be a literal ilike pattern. */
+export const safeTerm = (q: string) => q.replace(/[%_,()*\\.:"']/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
 
 export function validateVideoFile(f: { type: string; size: number }): string | null {
   if (!(VIDEO_TYPES as readonly string[]).includes(f.type)) return 'MP4, WebM 또는 MOV 영상만 업로드할 수 있습니다.';
@@ -100,16 +102,25 @@ export async function fetchPublicProfiles(ids: string[]): Promise<Map<string, Pu
   return new Map((data ?? []).map(p => [p.id, p]));
 }
 
+/** Popular = last 30 days ranked by real like count, newest first on ties. */
+export function rankPopular<T extends { id: string; created_at: string }>(posts: T[], likes: { post_id: string }[]): T[] {
+  const n = new Map<string, number>(); for (const l of likes) n.set(l.post_id, (n.get(l.post_id) ?? 0) + 1);
+  return [...posts].sort((a, b) => (n.get(b.id) ?? 0) - (n.get(a.id) ?? 0) || b.created_at.localeCompare(a.created_at));
+}
 export function usePosts(filter: PostFilter = {}, enabled = true) {
   return useQuery({
     queryKey: ['posts', filter],
     enabled,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<ServerPost[]> => {
-      let q = supabase.from('posts').select(POST_COLS).order('created_at', { ascending: false }).limit(60);
+      let q = supabase.from('posts').select(POST_COLS).order('created_at', { ascending: false }).limit(filter.limit ?? 60);
       if (filter.authorId) q = q.eq('author_id', filter.authorId);
       if (filter.authorIds) q = q.in('author_id', filter.authorIds.length ? filter.authorIds : ['00000000-0000-0000-0000-000000000000']);
       if (filter.catalogIds) q = q.in('catalog_id', filter.catalogIds.length ? filter.catalogIds : ['00000000-0000-0000-0000-000000000000']);
+      if (filter.brand) q = q.ilike('brand', safeTerm(filter.brand));
+      if (filter.tag) q = q.ilike('caption', `%#${safeTerm(filter.tag.replace(/^#/, ''))}%`);
+      if (filter.search) { const t = safeTerm(filter.search); if (t) q = q.or(`brand.ilike.%${t}%,model.ilike.%${t}%,reference.ilike.%${t}%,caption.ilike.%${t}%`); }
+      if (filter.since) q = q.gte('created_at', filter.since);
       if (filter.ids) q = q.in('id', filter.ids.length ? filter.ids : ['00000000-0000-0000-0000-000000000000']);
       const { data, error } = await q;
       if (error) throw error;

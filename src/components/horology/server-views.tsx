@@ -3,7 +3,8 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
-import { ArrowLeft, Bookmark, Check, Film, Heart, MessageCircle, Pencil, Plus, Send, Trash2, Watch as WatchIcon, Cog, UserRound } from 'lucide-react';
+import { ArrowLeft, Bookmark, Check, ChevronRight, Film, Heart, Menu, MessageCircle, Pencil, Plus, Search, Send, Trash2, Watch as WatchIcon, Cog, UserRound, X } from 'lucide-react';
+import { categories } from './data';
 import { Button } from '@/components/ui/button';
 import { BottomSheet } from './sheets';
 import { PostGrid, PostVideo, resetPreloadGate } from './server-video';
@@ -13,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { listConfirmedCatalog, type CatalogRecord } from '@/lib/catalog.functions';
 import { identifyWatch, type IdResult } from '@/lib/identify.functions';
 import { listMyWatches, addMyWatch, updateMyWatch, deleteMyWatch, type OwnedWatchInput } from '@/lib/collection.functions';
-import { usePosts, useLikes, useMyRows, useFollowCounts, useComments, toggleRow, uploadPost, deletePost, retryMediaCleanup, useInvalidate, validateVideoSignature, playbackMode, type ServerPost, type PostFilter } from '@/lib/server-data';
+import { usePosts, useLikes, useMyRows, useFollowCounts, useComments, toggleRow, uploadPost, deletePost, retryMediaCleanup, useInvalidate, validateVideoSignature, playbackMode, rankPopular, type ServerPost, type PostFilter } from '@/lib/server-data';
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : '요청을 처리하지 못했습니다.');
 const label = (p: { brand: string; model: string }) => [p.brand, p.model].filter(Boolean).join(' ') || 'Untitled watch';
@@ -97,18 +98,49 @@ function ServerComments({ post, open, onClose }: { post: ServerPost; open: boole
 }
 
 
+const FEED_TABS = ['Following', 'For You', 'Popular'] as const;
+const HASHTAGS = ['#WOTD', '#Rolex', '#Submariner', '#Vintage'];
+/** Chips with a real data source: brand matches posts.brand exactly, hashtags match the literal tag in the caption. Others wait for real taxonomy. */
+const CHIP_BRANDS: Record<string, string> = { Rolex: 'Rolex' };
+const UNAVAILABLE = new Set(['Vintage', 'Microbrands', 'Complications', 'Lume Shots']);
+const MENU = [['/profile', 'Profile'], ['/notifications', 'Notifications'], ['/active-bids', 'Live Bids'], ['/chat', 'Chats'], ['/discover', 'Discover'], ['/settings', 'Settings'], ['/login', 'Account']] as const;
+const POPULAR_DAYS = 30;
+
 export function ServerFeed() {
   const { user } = useSession();
-  const [tab, setTab] = useState<'For You' | 'Following'>('For You');
+  const [tab, setTab] = useState<typeof FEED_TABS[number]>('For You');
   const [sub, setSub] = useState<'Collectors' | 'Watches'>('Collectors');
+  const [chip, setChip] = useState('For You');
+  const [menu, setMenu] = useState(false);
+  const [lang, setLang] = useState<'KO' | 'EN'>('KO');
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  const [search, setSearch] = useState('');
   const [open, setOpen] = useState<number | null>(null);
+  useEffect(() => { const t = setTimeout(() => setSearch(query.trim()), 300); return () => clearTimeout(t); }, [query]);
   const follows = useMyRows('collector_follows', user?.id).data;
   const watchFollows = useMyRows('watch_follows', user?.id).data;
-  const filter: PostFilter = tab === 'For You' ? {} : sub === 'Collectors' ? { authorIds: follows ?? [] } : { catalogIds: watchFollows ?? [] };
-  const { data: posts = [], isLoading, error } = usePosts(filter, tab === 'For You' || !!user);
+  // Popular's 30-day window is fixed per page visit so the query key stays stable.
+  const [since] = useState(() => new Date(Date.now() - POPULAR_DAYS * 864e5).toISOString());
+  const refine: PostFilter = { ...(CHIP_BRANDS[chip] ? { brand: CHIP_BRANDS[chip] } : {}), ...(HASHTAGS.includes(chip) ? { tag: chip } : {}), ...(search ? { search } : {}) };
+  const filter: PostFilter = tab === 'Popular' ? { ...refine, since, limit: 200 } : tab === 'For You' ? refine : sub === 'Collectors' ? { ...refine, authorIds: follows ?? [] } : { ...refine, catalogIds: watchFollows ?? [] };
+  const { data: raw = [], isLoading, error } = usePosts(filter, tab !== 'Following' || !!user);
+  const popularLikes = useLikes(tab === 'Popular' ? raw.map(p => p.id) : []);
+  const posts = tab === 'Popular' ? rankPopular(raw, popularLikes.data ?? []) : raw;
+  const pick = (c: string) => { if (UNAVAILABLE.has(c)) { toast.info(`${c} 분류는 아직 준비 중입니다 · 실제 분류 정보가 쌓이면 열립니다.`); return; } setChip(chip === c && c !== 'For You' ? 'For You' : c); };
+  const refined = chip !== 'For You' || !!search;
   if (open !== null && posts.length) return <Player posts={posts} start={open} onClose={() => setOpen(null)}/>;
-  return <div className="feed-page grid-feed-page"><header className="feed-header xhs-header"><div className="xhs-row"><div className="xhs-tabs" role="tablist" aria-label="Feed tabs">{(['For You', 'Following'] as const).map(t => <Button key={t} variant="ghost" role="tab" aria-selected={tab === t} className={tab === t ? 'xhs-tab-active' : ''} onClick={() => setTab(t)}>{t}</Button>)}</div></div>{tab === 'Following' && user && <div className="xhs-row follow-subtabs" role="tablist" aria-label="Following type">{(['Collectors', 'Watches'] as const).map(t => <Button key={t} variant="category" role="tab" aria-selected={sub === t} className={sub === t ? 'category-active' : ''} onClick={() => setSub(t)}>{t} <small>{t === 'Collectors' ? follows?.length ?? 0 : watchFollows?.length ?? 0}</small></Button>)}</div>}</header>
-    <div className="feed-grid-scroll">{tab === 'Following' && !user ? <SignInPrompt text="Sign in to see collectors and watches you follow."/> : isLoading ? <p className="discovery-footer">Loading films…</p> : error ? <div className="empty-feed"><h2>Could not load films</h2><p>{errMsg(error)}</p></div> : posts.length ? <PostGrid posts={posts} onOpen={setOpen}/> : <div className="empty-feed follow-empty"><WatchIcon/><h2>{tab === 'For You' ? 'No films yet' : sub === 'Collectors' ? 'No posts from followed collectors' : 'No posts for followed watches'}</h2><p>{tab === 'For You' ? 'Be the first to share a wrist story with the + button.' : 'Follow from a film to fill this tab.'}</p></div>}</div></div>;
+  const emptyTitle = refined ? '조건에 맞는 필름이 없습니다' : tab === 'Following' ? (sub === 'Collectors' ? (follows?.length ? 'No posts from followed collectors' : 'No collectors followed yet') : (watchFollows?.length ? 'No posts for followed watches' : 'No watches followed yet')) : tab === 'Popular' ? `No films in the last ${POPULAR_DAYS} days` : 'No films yet';
+  const emptyText = refined ? '다른 브랜드나 검색어로 다시 찾아보세요.' : tab === 'Following' ? 'Follow a collector or an exact watch from a film.' : 'Be the first to share a wrist story with the + button.';
+  return <div className="feed-page grid-feed-page"><header className="feed-header xhs-header">
+    <div className="xhs-row"><Button variant="ghost" size="icon" aria-label="Open menu" onClick={() => setMenu(true)}><Menu size={19}/></Button><div className="xhs-tabs" role="tablist" aria-label="Feed tabs">{FEED_TABS.map(t => <Button key={t} variant="ghost" role="tab" aria-selected={tab === t} className={tab === t ? 'xhs-tab-active' : ''} onClick={() => setTab(t)}>{t}</Button>)}</div><Button variant="ghost" className="xhs-lang" aria-label="Language selector" onClick={() => { const next = lang === 'KO' ? 'EN' : 'KO'; setLang(next); toast.info(`${next} 선택됨 · 앱 전체 번역은 준비 중입니다`); }}>{lang}</Button></div>
+    {tab === 'Following' && user && <div className="xhs-row follow-subtabs" role="tablist" aria-label="Following type">{(['Collectors', 'Watches'] as const).map(t => <Button key={t} variant="category" role="tab" aria-selected={sub === t} className={sub === t ? 'category-active' : ''} onClick={() => setSub(t)}>{t} <small>{t === 'Collectors' ? follows?.length ?? 0 : watchFollows?.length ?? 0}</small></Button>)}</div>}
+    <div className="xhs-row xhs-chips"><div className="category-strip" role="tablist" aria-label="Brands and hashtags">{[...categories, ...HASHTAGS].map(c => <Button variant="category" role="tab" key={c} aria-selected={chip === c} aria-disabled={UNAVAILABLE.has(c) || undefined} title={UNAVAILABLE.has(c) ? '준비 중' : undefined} className={`${chip === c ? 'category-active' : ''} ${UNAVAILABLE.has(c) ? 'category-unavailable' : ''}`} onClick={() => pick(c)}>{c === 'For You' ? 'All' : c}</Button>)}</div><Button variant="ghost" size="icon" className="xhs-search" aria-label="Search films" aria-expanded={searching} onClick={() => setSearching(v => !v)}><Search size={17}/></Button></div>
+    {searching && <div className="xhs-row feed-search-row"><input className="feed-search-input" aria-label="Search brand, model, reference or caption" placeholder="브랜드 · 모델 · 레퍼런스 검색" value={query} maxLength={60} autoFocus onChange={e => setQuery(e.target.value)}/>{query && <Button variant="ghost" size="icon" aria-label="Clear search" onClick={() => setQuery('')}><X size={14}/></Button>}</div>}
+  </header>
+    <div className="feed-grid-scroll">{tab === 'Following' && !user ? <SignInPrompt text="Sign in to see collectors and watches you follow."/> : isLoading ? <p className="discovery-footer">Loading films…</p> : error ? <div className="empty-feed"><h2>Could not load films</h2><p>{errMsg(error)}</p></div> : posts.length ? <PostGrid posts={posts} onOpen={setOpen}/> : <div className="empty-feed follow-empty"><WatchIcon/><h2>{emptyTitle}</h2><p>{emptyText}</p>{(refined || tab !== 'For You') && <Button onClick={() => { setTab('For You'); setChip('For You'); setQuery(''); }}>Back to For You</Button>}</div>}</div>
+    <BottomSheet open={menu} onClose={() => setMenu(false)} title="Menu"><nav className="xhs-menu">{MENU.map(([to, l]) => <Button key={to} variant="outline" className="w-full" asChild><Link to={to}>{l}<ChevronRight/></Link></Button>)}</nav></BottomSheet>
+  </div>;
 }
 
 function IdentifyPanel({ catalog, onPickCatalog, onPickManual }: { catalog: CatalogRecord[]; onPickCatalog: (id: string) => void; onPickManual: (c: { brand: string; model: string; reference: string }) => void }) {
