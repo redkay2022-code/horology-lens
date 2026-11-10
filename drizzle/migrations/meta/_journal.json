@@ -15,6 +15,13 @@
       "when": 1794321644027,
       "tag": "0001_tighten_profile_role_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794322649651,
+      "tag": "0002_watch_catalog",
+      "breakpoints": true
     }
   ]
 }

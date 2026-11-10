@@ -65,6 +65,57 @@ export type Database = {
         }
         Relationships: []
       }
+      watch_catalog: {
+        Row: {
+          bezel: string | null
+          bracelet: string | null
+          brand: string
+          case_material: string | null
+          case_size_mm: number | null
+          created_at: string
+          dial: string | null
+          id: string
+          model: string
+          msrp_amount: number | null
+          msrp_currency: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["catalog_status"]
+          updated_at: string
+        }
+        Insert: {
+          bezel?: string | null
+          bracelet?: string | null
+          brand?: string
+          case_material?: string | null
+          case_size_mm?: number | null
+          created_at?: string
+          dial?: string | null
+          id?: string
+          model?: string
+          msrp_amount?: number | null
+          msrp_currency?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          updated_at?: string
+        }
+        Update: {
+          bezel?: string | null
+          bracelet?: string | null
+          brand?: string
+          case_material?: string | null
+          case_size_mm?: number | null
+          created_at?: string
+          dial?: string | null
+          id?: string
+          model?: string
+          msrp_amount?: number | null
+          msrp_currency?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -80,6 +131,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      catalog_status: "draft" | "confirmed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -208,6 +260,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      catalog_status: ["draft", "confirmed"],
     },
   },
 } as const
