@@ -53,9 +53,9 @@ export function UploadStudio() {
   setMedia(URL.createObjectURL(file)); setStage('preview'); setBaseId(watches[[...file.name].reduce((a, ch) => a + ch.charCodeAt(0), 0) % watches.length]!.id); setIdSize(undefined); setIdRef(undefined); setError('');
  };
  const publish = () => {
-   if (stage !== 'preview' || (mode === 'gallery' && (!media || idResult.status !== 'resolved'))) return;
-  const picked = (mode === 'gallery' && watches.find(w => w.id === baseId)) || watches[0];
-  const id = mode === 'gallery' && idResult.status === 'resolved' ? idResult.identity : null;
+   if (stage !== 'preview' || (mode === 'gallery' && !media) || idResult.status !== 'resolved') return;
+  const picked = watches.find(w => w.id === baseId) || watches[0];
+  const id = idResult.status === 'resolved' ? idResult.identity : null;
   const base = id ? { ...picked, model: id.model, ref: id.ref ?? '', diameter: id.size ?? picked.diameter, identity: id } : picked;
   addUpload({ ...base, id: `upload-${Date.now()}`, creator: 'alex.morgan', initials: 'AM', likes: 0, saves: 0, comments: 0,
    video: mode === 'live' ? base.video : media,
@@ -70,6 +70,14 @@ export function UploadStudio() {
   setMedia(''); closeUpload(); setStage('ready'); setExpires(null); setBgm(false); setFilter('Original'); setTool('');
  };
 const idResult = resolveIdentity(baseId, idSize, idRef);
+ const idStep = <section className="id-step" aria-label="AI Watch Identification">
+     <div className="id-head"><strong>AI Watch Identification</strong><small>DEMO · 추정치</small></div>
+     {idResult.status === 'size' && <div className="id-ask"><span>같은 디자인의 사이즈가 여러 개입니다. 케이스 사이즈를 선택하세요.</span><div>{idResult.sizes.map(z => <Button key={z} variant="outline" size="sm" onClick={() => setIdSize(z)}>{z} mm</Button>)}</div></div>}
+     {idResult.status === 'ref' && <div className="id-ask"><span>레퍼런스를 확정할 수 없습니다. 케이스백·보증서로 확인 후 선택하세요.</span><div>{idResult.refs.map(x => <Button key={x} variant="outline" size="sm" onClick={() => setIdRef(x)}>Ref. {x}</Button>)}<Button variant="ghost" size="sm" onClick={() => setIdRef(UNCONFIRMED)}>확인 불가 · Unconfirmed</Button></div></div>}
+     {idResult.status === 'resolved' && <dl className="id-review" aria-label="게시 전 검토">{([['Brand', idResult.identity.brand], ['Model', idResult.identity.model], ['Reference', idResult.identity.ref], ['Case size', idResult.identity.size ? `${idResult.identity.size} mm` : undefined], ['Dial', idResult.identity.variant?.dial], ['Bezel', idResult.identity.variant?.bezel], ['Case', idResult.identity.variant?.caseMaterial], ['Bracelet', idResult.identity.variant?.bracelet]] as const).map(([k, v]) => <div key={k}><dt>{k}</dt><dd className={v ? '' : 'id-unconfirmed'}>{v ?? 'Unconfirmed'}</dd></div>)}</dl>}
+     <label className="offer-input"><span>다른 시계로 변경 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => { setBaseId(e.target.value); setIdSize(undefined); setIdRef(undefined); }}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label>
+     <p className="studio-disclaimer">데모 식별 결과이며 실제 AI 분석·정품 감정이 아닙니다.</p>
+    </section>;
  const livePreview = mode === 'live' && stage === 'preview';
  return <BottomSheet open={uploadOpen} onClose={close} title="WRISTORY">
   <div className="upload-studio">
@@ -90,7 +98,7 @@ const idResult = resolveIdentity(baseId, idSize, idRef);
     {stage === 'ready' && <Button className="studio-primary" onClick={getMission}><Target size={17}/> 미션 받기</Button>}
     {(stage === 'armed' || stage === 'recording') && <div className="studio-record-controls"><span>{missionTime} + ✌️</span><Button variant="ghost" className={`studio-record-button ${stage === 'recording' ? 'is-recording' : ''}`} aria-label="3초 촬영 시작" disabled={stage === 'recording'} onClick={() => { setRecording(3); setStage('recording'); }}><i/></Button><span>3 SEC</span></div>}
     {stage === 'armed' && <Button variant="ghost" className="studio-retake" onClick={reset}><X size={14}/> 미션 취소</Button>}
-    {livePreview && <><Button variant="ghost" className="studio-retake" onClick={() => { setStage('ready'); setExpires(null); }}><RotateCcw size={14}/> 다시 촬영</Button><Button className="studio-primary" onClick={publish}><Check size={16}/> 인증 숏폼 게시하기</Button></>}
+    {livePreview && <>{idStep}<Button variant="ghost" className="studio-retake" onClick={() => { setStage('ready'); setExpires(null); }}><RotateCcw size={14}/> 다시 촬영</Button><Button className="studio-primary" disabled={idResult.status !== 'resolved'} onClick={publish}><Check size={16}/> 인증 숏폼 게시하기</Button></>}
     <p className="studio-disclaimer">데모 카메라 · 소유 인증 및 서버 토큰은 시뮬레이션입니다.</p>
    </> : <>
     <input ref={input} type="file" accept="video/*" hidden onChange={e => choose(e.target.files?.[0])}/>
@@ -99,14 +107,7 @@ const idResult = resolveIdentity(baseId, idSize, idRef);
     {tool === 'filters' && <div className="studio-filter-options">{(Object.keys(filters) as (keyof typeof filters)[]).map(f => <Button key={f} variant="outline" size="sm" aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</Button>)}</div>}
     {tool === 'trim' && <div className="studio-trim">{(['시작', '끝'] as const).map((label, i) => <label key={label}>{label} · {trim[i]?.toFixed(1)}s<input aria-label={label} type="range" min="0" max={duration} step="0.1" value={trim[i]} onChange={e => { const n = Number(e.target.value); setTrim(i === 0 ? [Math.min(n, trim[1] - .1), trim[1]] : [trim[0], Math.max(n, trim[0] + .1)]); }}/></label>)}</div>}
     {tool === 'bgm' && <Button variant="outline" aria-pressed={bgm} onClick={() => setBgm(!bgm)}><Music2 size={15}/>{bgm ? '✓ ' : ''}Midnight Escapement · Demo</Button>}
-    {media && <section className="id-step" aria-label="AI Watch Identification">
-     <div className="id-head"><strong>AI Watch Identification</strong><small>DEMO · 추정치</small></div>
-     {idResult.status === 'size' && <div className="id-ask"><span>같은 디자인의 사이즈가 여러 개입니다. 케이스 사이즈를 선택하세요.</span><div>{idResult.sizes.map(z => <Button key={z} variant="outline" size="sm" onClick={() => setIdSize(z)}>{z} mm</Button>)}</div></div>}
-     {idResult.status === 'ref' && <div className="id-ask"><span>레퍼런스를 확정할 수 없습니다. 케이스백·보증서로 확인 후 선택하세요.</span><div>{idResult.refs.map(x => <Button key={x} variant="outline" size="sm" onClick={() => setIdRef(x)}>Ref. {x}</Button>)}<Button variant="ghost" size="sm" onClick={() => setIdRef(UNCONFIRMED)}>확인 불가 · Unconfirmed</Button></div></div>}
-     {idResult.status === 'resolved' && <dl className="id-review" aria-label="게시 전 검토">{([['Brand', idResult.identity.brand], ['Model', idResult.identity.model], ['Reference', idResult.identity.ref], ['Case size', idResult.identity.size ? `${idResult.identity.size} mm` : undefined], ['Dial', idResult.identity.variant?.dial], ['Bezel', idResult.identity.variant?.bezel], ['Case', idResult.identity.variant?.caseMaterial], ['Bracelet', idResult.identity.variant?.bracelet]] as const).map(([k, v]) => <div key={k}><dt>{k}</dt><dd className={v ? '' : 'id-unconfirmed'}>{v ?? 'Unconfirmed'}</dd></div>)}</dl>}
-     <label className="offer-input"><span>다른 시계로 변경 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => { setBaseId(e.target.value); setIdSize(undefined); setIdRef(undefined); }}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label>
-     <p className="studio-disclaimer">데모 식별 결과이며 실제 AI 분석·정품 감정이 아닙니다.</p>
-    </section>}
+    {media && idStep}
     <Button className="studio-primary" disabled={!media || idResult.status !== 'resolved'} onClick={publish}><Check size={16}/> 피드에 게시하기</Button>
     <p className="studio-disclaimer">Display Only · 세션 내 게시 · BGM 오디오는 시뮬레이션입니다.</p>
    </>}
