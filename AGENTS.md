@@ -23,3 +23,4 @@
 
 - Auth identity comes from Lovable Cloud sessions; roles live only in user_roles (checked via has_role) and profile column grants limit edits, so privileges can never be self-assigned.
 - isDemoMode (VITE_BACKEND_MODE != server) gates the DEMO role switcher; mock community state stays the default until server adapters replace it per feature.
+- watch_catalog is written only by service_role/migrations; anon/authenticated get SELECT only and RLS exposes confirmed rows — the catalog is a reference list, not ownership proof.
