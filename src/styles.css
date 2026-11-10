@@ -143,3 +143,15 @@
 .shorts-closed{font-size:10px;color:var(--muted-foreground)}
 .focus-mode .shorts-info,.focus-mode .player-back{opacity:0;pointer-events:none}
 .details-extra{display:flex;flex-direction:column;gap:12px;margin:14px 0}.details-extra>div{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border);padding-top:10px}.details-extra small{font-size:9px;letter-spacing:1px;color:var(--primary)}.details-extra strong{font-size:13px}.details-extra span{font-size:10px;color:var(--muted-foreground)}
+
+/* Phase 7 — top-right share + roomier right rail (44px touch targets) */
+.video-share-top{position:absolute;top:max(10px,env(safe-area-inset-top));right:10px;z-index:12;width:44px;height:44px;padding:0;border-radius:50%;color:var(--foreground);background:color-mix(in oklch,var(--overlay) 45%,transparent)}
+.video-share-top svg{width:22px;height:22px}
+.focus-mode .video-share-top{opacity:0;pointer-events:none}
+.video-actions{width:48px;right:12px}
+.video-action-button{width:44px;height:44px}
+.creator-avatar{width:44px;height:44px}
+.follow-button{left:13px}
+.shorts-info{right:72px}
+.player-feed-page .video-actions{gap:16px}
+@media(max-height:760px){.player-feed-page .video-actions{gap:10px}}
