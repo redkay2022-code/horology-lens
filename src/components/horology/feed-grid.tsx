@@ -16,7 +16,7 @@ function FilmTile({ watch, index, onOpen }: { watch: Watch; index: number; onOpe
   return <Button variant="feedTile" className={`tile-proportion-${index % 3}`} aria-label={`Watch ${watch.brand} ${watch.model}`} onClick={() => onOpen(watch.id)} onMouseEnter={preview} onMouseLeave={stop} onFocus={preview} onBlur={stop}>
     <video ref={video} src={watch.video || undefined} poster={watch.image} muted loop playsInline preload="none" />
     
-    <span className="grid-bid-badges">{watch.is_live_verified ? <><span className="grid-badge grid-badge-gold"><BadgeCheck size={10} />Verified Owner</span><span className="grid-badge grid-badge-offer"><Flame size={10} />{a && a.count ? `$${a.highest.toLocaleString('en-US')}` : 'Bids open'}</span></> : <span className="grid-badge grid-badge-muted"><LockKeyhole size={10} />Display Only</span>}</span>
+    <span className="grid-bid-badges">{watch.is_live_verified ? <><span className="grid-badge grid-badge-gold" title={watch.id.startsWith('upload-')?'Simulated live challenge — not ownership verification':undefined}><BadgeCheck size={10} />Verified Owner{watch.id.startsWith('upload-')?' · DEMO':''}</span><span className="grid-badge grid-badge-offer"><Flame size={10} />{a && a.count ? `$${a.highest.toLocaleString('en-US')}` : 'Bids open'}</span></> : <span className="grid-badge grid-badge-muted"><LockKeyhole size={10} />Display Only</span>}</span>
     <span className="grid-watch-label"><small>{watch.brand}</small><strong>{watch.model}</strong></span>
   </Button>;
 }
