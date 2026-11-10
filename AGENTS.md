@@ -25,3 +25,6 @@
 - isDemoMode (VITE_BACKEND_MODE != server) gates the DEMO role switcher; mock community state stays the default until server adapters replace it per feature.
 - watch_catalog is written only by service_role/migrations; anon/authenticated get SELECT only and RLS exposes confirmed rows — the catalog is a reference list, not ownership proof.
 - owned_watches: owner_id is forced from auth.uid() by trigger and never accepted from clients; only owner-scoped RLS exists (no public SELECT), so purchase data stays private even when visibility becomes public.
+- Server-mode screens live in server-views.tsx and are swapped in per route via isDemoMode; demo components stay untouched so the two data sources never mix.
+- Posts/likes/saves/comments/follows are read and written through the browser client with RLS as the boundary (user columns default to auth.uid() and are never granted for insert); posts_guard forces author and author-folder video paths.
+- Post videos live in the private post-media bucket under <uid>/; playback uses short-lived signed URLs, readable only when a post references the file (workspace blocks public buckets).
