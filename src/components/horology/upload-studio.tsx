@@ -3,9 +3,14 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { BadgeCheck, Camera, Check, Clock3, Film, Music2, Scissors, SlidersHorizontal, Target, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomSheet } from './sheets';
-import { watches } from './data';
+import { watches, type Watch } from './data';
 import { useCommunity } from './store';
-import { resolveIdentity, UNCONFIRMED } from './watch-identity';
+import { resolveIdentity, UNCONFIRMED, type WatchIdentity } from './watch-identity';
+
+/** Merge watch identity metadata without ever touching the captured media. */
+export function applyIdentity(picked: Watch, id: WatchIdentity | null, captured: { video: string; image: string }): Watch {
+  return { ...picked, ...(id ? { model: id.model, ref: id.ref ?? '', diameter: id.size ?? picked.diameter, identity: id } : {}), video: captured.video, image: captured.image };
+}
 
 const filters = { Original: '', Vintage: 'sepia(.45) contrast(.95)', Gold: 'sepia(.3) saturate(1.3)', Mono: 'grayscale(1)' };
 type Mode = 'live' | 'gallery';
@@ -56,9 +61,9 @@ export function UploadStudio() {
    if (stage !== 'preview' || (mode === 'gallery' && !media) || idResult.status !== 'resolved') return;
   const picked = watches.find(w => w.id === baseId) || watches[0];
   const id = idResult.status === 'resolved' ? idResult.identity : null;
-  const base = id ? { ...picked, model: id.model, ref: id.ref ?? '', diameter: id.size ?? picked.diameter, identity: id } : picked;
+  // Media stays the captured/selected clip; identity only changes metadata.
+  const base = applyIdentity(picked, id, mode === 'live' ? { video: watches[0].video, image: watches[0].image } : { video: media, image: picked.image });
   addUpload({ ...base, id: `upload-${Date.now()}`, creator: 'alex.morgan', initials: 'AM', likes: 0, saves: 0, comments: 0,
-   video: mode === 'live' ? base.video : media,
    is_live_verified: mode === 'live', foundingMember: false,
    auction: mode === 'live' ? { highest: 14500, count: 0, increment: 100, seconds: 10800 } : undefined,
    caption: mode === 'live' ? 'Live Time Complete · simulated challenge, not verified ownership.' : 'A moment on my wrist. · Display Only', tags: '#WOTD',
