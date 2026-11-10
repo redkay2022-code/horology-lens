@@ -19,9 +19,9 @@ export function matchSameWatch(posts: Watch[], key: SameWatchKey): { exact: Watc
   return { exact: family.filter(isExact), related: family.filter(p => !isExact(p)) };
 }
 
-/** Exact watch identity key (brand + confirmed reference + case size); null when the reference is Unconfirmed. */
+/** Exact watch identity key (brand + confirmed reference + confirmed case size); null when reference or size is missing. */
 export function watchKey(brand: string, ref?: string, size?: number): string | null {
-  const r = normRef(ref); if (!r || !brand) return null;
-  return `${norm(brand)}|${r}|${size ?? ''}`;
+  const r = normRef(ref); if (!r || !norm(brand) || size == null || !Number.isFinite(size) || size <= 0) return null;
+  return `${norm(brand)}|${r}|${size}`;
 }
 export const postWatchKey = (p: Watch) => watchKey(p.brand, p.identity ? p.identity.ref : p.ref, p.identity?.size ?? (p.diameter || undefined));

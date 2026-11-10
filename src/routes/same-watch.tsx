@@ -28,9 +28,11 @@ function SameWatch() {
   const header = <header className="same-watch-header">
     <Button variant="ghost" size="icon" asChild><Link to="/" aria-label="Back"><ArrowLeft size={19} /></Link></Button>
     <div><small>{brand}</small><strong>{model}</strong><span>{[ref ? `Ref. ${ref}` : 'Reference unconfirmed', size && `${size} mm`].filter(Boolean).join(' · ')} · {exact.length} exact</span></div>
-    <Button variant="follow" className={`watch-follow ${following ? 'is-following' : ''}`} aria-pressed={following} disabled={!key} title={key ? undefined : 'Reference unconfirmed — cannot follow as an exact watch'} onClick={() => key && toggleWatchFollow(key)}>{following ? 'Following' : 'Follow Watch'}</Button>
+    <Button variant="follow" className={`watch-follow ${following ? 'is-following' : ''}`} aria-pressed={following} disabled={!key} title={key ? undefined : 'Exact Watch Follow requires a confirmed reference and case size.'} onClick={() => key && toggleWatchFollow(key)}>{following ? 'Following' : 'Follow Watch'}</Button>
   </header>;
+  const followNote = key ? null : <p className="same-watch-note">Exact Watch Follow requires a confirmed reference and case size.</p>;
   return <WatchFeed list={[...exact, ...related]} header={header} renderGrid={(_items: Watch[], onOpen: (id: string) => void) => <>
+    {followNote}
     <h2 className="same-watch-section">Exact Match <small>{exact.length}</small></h2>
     {exact.length ? <div className="same-watch-grid" aria-label="Exact match grid">{exact.map(w => <Tile key={w.id} w={w} onOpen={onOpen} />)}</div> : <p className="same-watch-note">{ref ? '확인된 동일 레퍼런스·사이즈 게시물이 없습니다.' : '레퍼런스가 확인되지 않아 정확히 일치하는 시계로 표시할 수 없습니다.'}</p>}
     {related.length > 0 && <><h2 className="same-watch-section">Related Watches <small>{related.length}</small></h2>
