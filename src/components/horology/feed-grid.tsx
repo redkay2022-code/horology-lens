@@ -22,5 +22,5 @@ function FilmTile({ watch, index, onOpen }: { watch: Watch; index: number; onOpe
 }
 
 export function FeedGrid({ watches, onOpen }: { watches: Watch[]; onOpen: (id: string) => void }) {
-  return <div className="feed-masonry" aria-label="Watch film grid">{[0, 1, 2].map(column => <div className="feed-masonry-column" key={column}>{watches.map((watch, index) => index % 3 === column ? <FilmTile key={watch.id} watch={watch} index={index} onOpen={onOpen} /> : null)}</div>)}</div>;
+  return <div className="feed-masonry" aria-label="Watch film grid">{[0, 1].map(column => <div className="feed-masonry-column" key={column}>{watches.map((watch, index) => index % 2 === column ? <FilmTile key={watch.id} watch={watch} index={index} onOpen={onOpen} /> : null)}</div>)}</div>;
 }

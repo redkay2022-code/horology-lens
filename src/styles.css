@@ -113,3 +113,33 @@
 /* Prominent distraction-free viewing control */
 .clean-view-button{width:44px;height:44px;padding:0;border:1px solid var(--primary);border-radius:50%;background:var(--primary);color:var(--primary-foreground);box-shadow:0 2px 12px color-mix(in oklch,var(--overlay) 60%,transparent)}
 .clean-view-button:hover{background:color-mix(in oklch,var(--primary) 85%,var(--foreground))}.clean-view-button svg{width:24px;height:24px;stroke-width:2}.video-actions .clean-view-action>span{font-size:10px;font-weight:700;color:var(--primary);line-height:1.5}
+
+/* Phase 7 — Xiaohongshu home + Shorts player */
+:root{--background:oklch(0.155 0.004 270);--overlay:oklch(0.1 0.004 270);--gradient-metal:linear-gradient(135deg,oklch(0.6 0.1 80) 0%,oklch(0.9 0.09 92) 28%,oklch(0.72 0.13 85) 50%,oklch(0.5 0.09 75) 72%,oklch(0.86 0.1 90) 100%);--shadow-metal:inset 0 1px 0 oklch(0.97 0.05 95 / .6),inset 0 -1px 0 oklch(0.35 0.06 70 / .7),0 3px 10px oklch(0.05 0 0 / .6)}
+.feed-masonry{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.feed-masonry-column{gap:8px}
+.xhs-header{padding:max(10px,env(safe-area-inset-top)) 10px 0!important}
+.xhs-row{display:flex;align-items:center;gap:4px}
+.xhs-tabs{flex:1;display:flex;justify-content:center;gap:2px}
+.xhs-tabs button{font-size:13px;height:32px;padding:0 9px;color:var(--muted-foreground);font-weight:500;border-radius:0;border-bottom:2px solid transparent}
+.xhs-tabs button.xhs-tab-active{color:var(--foreground);font-weight:700;border-image:var(--gradient-metal) 1;border-bottom:2px solid}
+.xhs-lang{height:30px;padding:0 6px;font-size:11px;font-weight:700;flex-direction:column;gap:0;line-height:1}.xhs-lang small{font-size:6px;color:var(--primary);letter-spacing:.5px}
+.xhs-chips{margin-top:6px}.xhs-chips .category-strip{flex:1;margin:0;padding:0 0 8px}
+.xhs-search{flex-shrink:0;margin-bottom:8px}
+.xhs-header .category-button.category-active,.silent-bid,.follow-button{background:var(--gradient-metal)!important;border-color:transparent!important;color:var(--primary-foreground)!important;box-shadow:var(--shadow-metal)}
+.xhs-menu{display:flex;flex-direction:column;gap:8px}.xhs-menu a{justify-content:space-between}
+.feed-masonry .grid-badge{font-size:7px;padding:2px 5px}
+.player-feed-page .snap-feed{touch-action:pan-y}
+.player-back{position:absolute;top:max(14px,env(safe-area-inset-top));left:10px;z-index:12;color:var(--foreground);background:color-mix(in oklch,var(--overlay) 45%,transparent);border-radius:50%}
+.player-feed-page .feed-ownership{top:max(60px,env(safe-area-inset-top));right:80px}.player-feed-page .feed-ownership small{display:none}
+.player-feed-page .video-actions{bottom:24px}
+.player-feed-page .creator-avatar{padding:0;border-color:transparent;background-image:linear-gradient(130deg,var(--secondary),var(--accent)),var(--gradient-metal);background-origin:border-box;background-clip:padding-box,border-box;color:var(--foreground)}
+.follow-button.is-following{filter:brightness(.85)}
+.shorts-info{position:absolute;left:0;right:64px;bottom:0;padding:60px 16px 18px;display:flex;flex-direction:column;gap:3px;background:linear-gradient(0deg,color-mix(in oklch,var(--overlay) 85%,transparent),transparent);transition:opacity .3s}
+.shorts-brand{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--primary);font-weight:700}
+.shorts-model{font-size:16px;font-weight:700;line-height:1.25}
+.shorts-ref,.shorts-creator{font-size:11px;color:color-mix(in oklch,var(--foreground) 75%,transparent)}
+.shorts-buttons{display:flex;gap:8px;margin-top:10px;align-items:center}
+.shorts-details{height:34px;font-size:11px;gap:5px;background:color-mix(in oklch,var(--overlay) 50%,transparent)}
+.shorts-closed{font-size:10px;color:var(--muted-foreground)}
+.focus-mode .shorts-info,.focus-mode .player-back{opacity:0;pointer-events:none}
+.details-extra{display:flex;flex-direction:column;gap:12px;margin:14px 0}.details-extra>div{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border);padding-top:10px}.details-extra small{font-size:9px;letter-spacing:1px;color:var(--primary)}.details-extra strong{font-size:13px}.details-extra span{font-size:10px;color:var(--muted-foreground)}
