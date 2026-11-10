@@ -20,3 +20,6 @@
 - Use generated watch photography and CDN-hosted looping cinematic mock films, not live brand footage; this keeps demo media available without external hotlinks.
 - Keep Instagram caption and watermark previews local to the upload editor, separate from the native feed post, because simulated cross-post settings must not imply a real export or alter WRISTORY playback.
 - Use react-zoom-pan-pinch on the existing video element for macro inspection, with local per-post transforms and shared clean-view state, so gestures remain bounded and playback never remounts on entry or exit.
+
+- Auth identity comes from Lovable Cloud sessions; roles live only in user_roles (checked via has_role) and profile column grants limit edits, so privileges can never be self-assigned.
+- isDemoMode (VITE_BACKEND_MODE != server) gates the DEMO role switcher; mock community state stays the default until server adapters replace it per feature.

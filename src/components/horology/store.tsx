@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Watch } from './data';
 import { auctionPosts, canOffer, demoAccounts, ownPostMessage, type AuctionState, type DemoRole } from './auction';
 import { toast } from 'sonner';
+import { isDemoMode } from '@/lib/backend-mode';
 
 type CommunityState = {
   liked: string[]; saved: string[]; followed: string[]; uploads: Watch[];
@@ -28,7 +29,8 @@ export function HorologyProvider({children}:{children:ReactNode}) {
   const [cleanView,setCleanView]=useState(false);
   const [auctions,setAuctions]=useState<Record<string,AuctionState>>({});
   const [now,setNow]=useState(0);
-  const [role,setRole]=useState<DemoRole>('buyer');const me=demoAccounts[role];
+  const [role,setDemoRole]=useState<DemoRole>('buyer');const me=demoAccounts[role];
+  const setRole=(r:DemoRole)=>{if(isDemoMode)setDemoRole(r);};
   const [readNotes,setReadNotes]=useState<string[]>([]);
   const [offerWatch,setOfferWatch]=useState<Watch|null>(null);
   useEffect(()=>{
