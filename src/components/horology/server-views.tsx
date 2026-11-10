@@ -15,7 +15,9 @@ import { useCommunity } from './store';
 import { useSession, useProfile } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { listConfirmedCatalog, type CatalogRecord } from '@/lib/catalog.functions';
-import { identifyWatch, type IdResult } from '@/lib/identify.functions';
+import { VideoIdentifyPanel } from './video-identify';
+import { mergeSuggestion, WATCH_FIELDS, type Provenance, type WatchField } from '@/lib/video-identify';
+import type { CreationWatch } from '@/lib/creation-watch';
 import { listMyWatches, addMyWatch, updateMyWatch, deleteMyWatch, type OwnedWatchInput } from '@/lib/collection.functions';
 import { usePosts, useLikes, useMyRows, useFollowCounts, useComments, toggleRow, uploadPost, deletePost, retryMediaCleanup, useInvalidate, validateVideoSignature, playbackMode, rankPopular, type ServerPost, type PostFilter } from '@/lib/server-data';
 
@@ -145,24 +147,6 @@ export function ServerFeed() {
   </div>;
 }
 
-function IdentifyPanel({ lang, catalog, onPickCatalog, onPickManual }: { lang: CreationLanguage; catalog: CatalogRecord[]; onPickCatalog: (id: string) => void; onPickManual: (c: { brand: string; model: string; reference: string }) => void }) {
-  const identify = useServerFn(identifyWatch);
-  const [busy, setBusy] = useState(false);
-  const [res, setRes] = useState<IdResult | null>(null);
-  const run = async (file: File) => {
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { toast.error('JPEG/PNG/WebP 5MB 이하 사진만 가능합니다.'); return; }
-    const image = await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = no; r.readAsDataURL(file); });
-    setBusy(true); setRes(null);
-    try { const r = await identify({ data: { image } }); setRes(r); if (r.error) toast.error(r.error); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
-  };
-  return <div className="details-extra" aria-label="AI watch identification">
-    <label className="creation-label">{creationText(lang, '사진으로 AI 식별 (선택)', 'AI identification from a photo (optional)')}<input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Watch photo" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) void run(f); }}/></label>
-    {busy && <small role="status">{creationText(lang, '시계 식별 중…', 'Identifying…')}</small>}
-    {res && !res.error && (res.candidates.length ? res.candidates.map((c, i) => { const m = res.matches.find(x => x.candidateIndex === i); const rec = m && catalog.find(r => r.id === m.catalogId); return <div key={i}><small>{creationText(lang, 'AI 추정 후보', 'AI suggestion')} · {Math.round(c.confidence * 100)}%</small><strong>{c.brand} {c.model}{c.reference ? ` · ${c.reference}` : ''}</strong>{rec && rec.reference && rec.caseSizeMm ? <Button type="button" size="sm" variant="outline" onClick={() => onPickCatalog(rec.id)}>{creationText(lang, '모델 선택:', 'Select model:')} {rec.reference} · {rec.caseSizeMm}mm</Button> : <Button type="button" size="sm" variant="ghost" onClick={() => onPickManual({ brand: c.brand, model: c.model, reference: c.reference ?? '' })}>{creationText(lang, '미확인 정보로 사용', 'Use as unconfirmed')}</Button>}</div>; }) : <small>{creationText(lang, '시계를 찾지 못했습니다. 직접 선택해 주세요.', 'No watch recognised. Choose manually.')}</small>)}
-    <small className="creation-note">{creationText(lang, 'AI 추정이며 진품·소유 인증이 아닙니다. 사진은 저장되지 않습니다.', 'AI suggestion, not authenticity or ownership verification. Photos are not stored.')}</small>
-  </div>;
-}
-
 /* ---------------- Upload ---------------- */
 
 export function ServerUploadSheet() {
@@ -183,7 +167,19 @@ export function ServerUploadSheet() {
   const owned = useQuery({ queryKey: ['my-watches'], queryFn: () => list() as Promise<OwnedRow[]>, enabled: uploadOpen && !!user });
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
-  const reset = () => { setFile(null); setWatch({ catalogId: '', brand: '', model: '', reference: '' }); setCaption(''); };
+  const touched = useRef(new Set<WatchField>());
+  const watchRef = useRef<CreationWatch>(watch); watchRef.current = watch;
+  const unknownProv = { catalogId: 'unknown', brand: 'unknown', model: 'unknown', reference: 'unknown' } as Record<WatchField, Provenance>;
+  const [prov, setProv] = useState(unknownProv);
+  const commit = (next: CreationWatch, fields: WatchField[], p: Provenance) => { watchRef.current = next; setWatch(next); setProv(old => { const o = { ...old }; fields.forEach(f => { o[f] = p; }); return o; }); };
+  const userChange = (next: CreationWatch) => { const changed = WATCH_FIELDS.filter(f => next[f] !== watchRef.current[f]); changed.forEach(f => touched.current.add(f)); commit(next, changed, 'user'); };
+  const applyAi = (s: CreationWatch, explicit: boolean) => {
+    const { next, filled } = mergeSuggestion(watchRef.current, touched.current, s, explicit);
+    if (explicit) WATCH_FIELDS.forEach(f => touched.current.add(f));
+    if (filled.length || explicit) commit(next, explicit ? WATCH_FIELDS : filled, explicit ? 'user' : next.catalogId && next.catalogId === s.catalogId ? 'catalog' : 'ai');
+    return WATCH_FIELDS.filter(f => s[f] && next[f] !== s[f]).length; // fields kept as the user had them
+  };
+  const reset = () => { setFile(null); touched.current.clear(); setProv(unknownProv); commit({ catalogId: '', brand: '', model: '', reference: '' }, [], 'unknown'); setCaption(''); };
   const submit = async () => {
     if (!user || !file || busy || checking) return;
     const c = catalog.find(x => x.id === watch.catalogId);
@@ -196,8 +192,8 @@ export function ServerUploadSheet() {
   return <CreationSheet open={uploadOpen} onClose={closeUpload} title={t('시계 영상 게시', 'Post a Watch Video')} lang={lang} onLanguage={() => setLang(lang === 'KO' ? 'EN' : 'KO')} busy={busy}>{!user ? <SignInPrompt text={t('로그인 후 시계 영상을 게시할 수 있습니다.', 'Sign in to upload a watch video.')}/> : <form className="creation-form" onSubmit={e => { e.preventDefault(); void submit(); }}><fieldset className="creation-body" disabled={busy}>
     <section className="creation-section"><h3><Film/>{t('손목 위의 순간', 'A moment on your wrist')}</h3><input ref={fileRef} className="sr-only" type="file" accept="video/mp4,video/webm,video/quicktime" aria-label="Video file" onChange={async e => { const input = e.currentTarget; const f = input.files?.[0] ?? null; const ticket = ++selection.current; setChecking(true); const bad = f && await validateVideoSignature(f); if (ticket !== selection.current) return; if (bad) { toast.error(bad); input.value = ''; setFile(null); } else setFile(f); setChecking(false); }}/>
     {preview && <video src={preview} className="creation-video" muted loop autoPlay playsInline controls/>}<Button type="button" variant="outline" className={`creation-video-picker ${file ? 'has-video' : ''}`} disabled={checking} onClick={() => fileRef.current?.click()}><Film/><strong>{checking ? t('영상 확인 중…', 'Checking video…') : file ? file.name : t('영상 선택', 'Choose a video')}</strong><span>{file ? t('다른 영상 선택', 'Choose another video') : 'MP4 · WebM · MOV / 100 MiB'}</span></Button></section>
-    <WatchIdentification catalog={catalog} lang={lang} value={watch} onChange={setWatch} collection={<label className="creation-label">{t('내 컬렉션에서 선택', 'Choose from my collection')}<select aria-label="Existing collection watch" value="" disabled={owned.isLoading || !!owned.error} onChange={e => { const w = owned.data?.find(x => x.id === e.target.value); if (w) setWatch(collectionIdentification(w)); }}><option value="">{owned.isLoading ? t('불러오는 중…', 'Loading…') : owned.error ? t('컬렉션을 불러오지 못했습니다', 'Could not load collection') : t('시계 선택 (선택 사항)', 'Select a watch (optional)')}</option>{(owned.data ?? []).map(w => { const safe = collectionIdentification(w); const c = catalog.find(x => x.id === safe.catalogId); return <option key={w.id} value={w.id}>{c ? `${c.brand} ${c.model} · ${c.reference}` : [safe.brand, safe.model, safe.reference].filter(Boolean).join(' · ')}</option>; })}</select></label>}/>
-    <section className="creation-section"><IdentifyPanel lang={lang} catalog={catalog} onPickCatalog={id => setWatch({ ...watch, catalogId: id })} onPickManual={c => setWatch({ ...c, catalogId: '' })}/></section>
+    <WatchIdentification catalog={catalog} lang={lang} value={watch} onChange={userChange} collection={<label className="creation-label">{t('내 컬렉션에서 선택', 'Choose from my collection')}<select aria-label="Existing collection watch" value="" disabled={owned.isLoading || !!owned.error} onChange={e => { const w = owned.data?.find(x => x.id === e.target.value); if (w) { WATCH_FIELDS.forEach(f => touched.current.add(f)); commit(collectionIdentification(w), WATCH_FIELDS, 'user'); } }}><option value="">{owned.isLoading ? t('불러오는 중…', 'Loading…') : owned.error ? t('컬렉션을 불러오지 못했습니다', 'Could not load collection') : t('시계 선택 (선택 사항)', 'Select a watch (optional)')}</option>{(owned.data ?? []).map(w => { const safe = collectionIdentification(w); const c = catalog.find(x => x.id === safe.catalogId); return <option key={w.id} value={w.id}>{c ? `${c.brand} ${c.model} · ${c.reference}` : [safe.brand, safe.model, safe.reference].filter(Boolean).join(' · ')}</option>; })}</select></label>}/>
+    <section className="creation-section"><VideoIdentifyPanel file={file} lang={lang} catalog={catalog} onSuggest={applyAi}/><div className="prov-row" aria-label="Field sources">{(['brand', 'model', 'reference'] as const).map(f => { const p: Provenance = !watch.catalogId && !watch[f] ? 'unknown' : watch.catalogId ? (prov.catalogId === 'user' ? 'user' : 'catalog') : prov[f]; return <span key={f} data-p={p}>{[t('브랜드', 'Brand'), t('모델', 'Model'), t('레퍼런스', 'Reference')][['brand', 'model', 'reference'].indexOf(f)]} · {{ ai: t('AI 추정', 'AI estimate'), catalog: t('카탈로그 확인', 'Catalog verified'), user: t('사용자 확인', 'User confirmed'), unknown: t('알 수 없음', 'Unknown') }[p]}</span>; })}<span data-p={watch.catalogId ? 'catalog' : 'unknown'}>{t('케이스', 'Case')} · {watch.catalogId ? t('카탈로그 확인', 'Catalog verified') : t('알 수 없음', 'Unknown')}</span></div></section>
     <section className="creation-section"><h3>{t('시계 이야기', 'Your wrist story')}</h3><label className="creation-label">{t('캡션 (선택)', 'Caption (optional)')}<textarea aria-label="Caption" maxLength={1000} placeholder={t('오늘 이 시계를 선택한 이유는 무엇인가요?', 'What made this your watch today?')} value={caption} onChange={e => setCaption(e.target.value)}/></label><small className="creation-count">{caption.length} / 1000</small></section>
   </fieldset><CreationFooter busy={busy} disabled={!file || checking} lang={lang} text={t('영상 게시', 'Publish')}/></form>}</CreationSheet>;
 }

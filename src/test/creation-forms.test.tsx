@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({ profile: { handle: 'real-collector', display_n
 vi.mock('@tanstack/react-start', () => ({ useServerFn: (fn: unknown) => fn }));
 vi.mock('@/lib/catalog.functions', () => ({ listConfirmedCatalog: mocks.catalog }));
 vi.mock('@/lib/collection.functions', () => ({ listMyWatches: mocks.list, addMyWatch: mocks.add, updateMyWatch: mocks.update, deleteMyWatch: mocks.remove }));
+vi.mock('@/lib/video-frames', async o => ({ ...await o<object>(), extractFrames: () => Promise.reject(new Error('jsdom')) }));
 vi.mock('@/lib/identify.functions', () => ({ identifyWatch: mocks.identify }));
 vi.mock('@/hooks/use-auth', () => ({ useSession: () => ({ user: mocks.user, ready: true }), useProfile: () => ({ data: mocks.profile }) }));
 vi.mock('@/components/horology/store', () => ({ useCommunity: () => ({ uploadOpen: true, closeUpload: vi.fn(), auctions: {} }) }));

@@ -34,3 +34,4 @@
 - Creation sheets use their own viewport-aware shell, not global BottomSheet changes, to keep unrelated drawers stable.
 - Collection-to-post selection uses an explicit identification-only projection with no collection ID or purchase fields, to preserve private data and avoid permanent links.
 - Primary button surfaces use shared static metallic tokens; non-button accents remain solid for readability and semantic states stay independent.
+- Video watch identification extracts frames in the browser and sends one frame per call to the existing identifyWatch; per-video tokens and touched-field tracking discard stale results and never overwrite user edits, so AI suggestions can never silently change what is published.

@@ -271,3 +271,12 @@ a.shorts-creator{color:inherit;text-decoration:none}
 .creation-form{flex:1}
 .creation-body{min-inline-size:0}
 .creation-body{height:0;flex:1 1 0%;display:block}
+.video-identify .vid-status{display:flex;align-items:center;gap:10px;border:0;padding:0}.video-identify .vid-status>svg{width:18px;height:18px;color:var(--primary);flex-shrink:0}.video-identify .vid-status strong{font-size:13px}
+.vid-steps{display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:10px;color:var(--muted-foreground)}.vid-steps li{flex:1;border-top:2px solid var(--border);padding-top:6px}.vid-steps li[data-state=active]{border-color:var(--primary);color:var(--foreground)}.vid-steps li[data-state=done]{border-color:var(--primary);opacity:.7}
+.video-identify .vid-candidate,.video-identify .vid-question{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--border);padding-top:10px}
+.video-identify .vid-actions{flex-direction:row;border:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}.creation-body .vid-actions button{margin-top:0;min-height:40px}
+.video-identify .vid-frames{display:grid;border:0;padding:0;grid-template-columns:repeat(5,1fr);gap:6px}.video-identify .vid-frames button{margin:0;min-height:0;white-space:normal;display:flex;flex-direction:column;gap:2px;padding:2px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted-foreground);font-size:9px}.vid-frames button.is-selected{border-color:var(--primary)}.vid-frames img{width:100%;object-fit:cover;height:72px;border-radius:2px}
+.vid-slider input[type=range]{min-height:28px;padding:0;accent-color:var(--primary)}
+.vid-specs{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:4px 0}.vid-specs div{display:flex;flex-direction:column}.vid-specs dt{font-size:9px;color:var(--muted-foreground)}.vid-specs dd{font-size:12px;margin:0}.vid-specs dd[data-known=false]{color:var(--muted-foreground)}
+.vid-message{color:var(--muted-foreground)!important}
+.prov-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.prov-row span{font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:999px;color:var(--muted-foreground)}.prov-row span[data-p=catalog],.prov-row span[data-p=user]{border-color:var(--primary);color:var(--foreground)}
