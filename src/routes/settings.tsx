@@ -17,7 +17,7 @@ const sections:Record<string,string>={
 };
 function Settings(){
  const {me}=useCommunity();const [open,setOpen]=useState<string|null>(null);
- return <div className="content-page chat-page"><header className="auction-header"><Link to="/profile" className="chat-back"><ChevronLeft size={14}/>Profile</Link><span className="auction-kicker">SETTINGS · DEMO</span><div className="auction-title"><h1>Settings<span>.</span></h1></div><p className="subtle">Signed in as @{me} (DEMO)</p></header>
+ return <div className="content-page chat-page"><header className="auction-header"><Button variant="ghost" asChild className="chat-back"><Link to="/profile"><ChevronLeft size={14}/>Profile</Link></Button><span className="auction-kicker">SETTINGS · DEMO</span><div className="auction-title"><h1>Settings<span>.</span></h1></div><p className="subtle">Signed in as @{me} (DEMO)</p></header>
   {Object.keys(sections).map(k=><Button key={k} variant="ghost" className="conversation-row" onClick={()=>setOpen(k)}><span><strong>{k}</strong><small>{k==='About WRISTORY'?'Version · DEMO':'준비 중 · DEMO'}</small></span><ChevronRight/></Button>)}
   <Button variant="outline" asChild><Link to="/login">Login / Sign Up (DEMO)</Link></Button>
   <BottomSheet open={!!open} onClose={()=>setOpen(null)} title={open??''}><p className="subtle" style={{padding:'8px 4px 24px',lineHeight:1.8}}>{open?sections[open]:''}</p></BottomSheet>

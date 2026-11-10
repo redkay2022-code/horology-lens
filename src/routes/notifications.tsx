@@ -16,7 +16,7 @@ function Notifications(){
   if(a.buyer===me||(a.chatId&&w.creator===me))a.messages.forEach((m,i)=>{if(m.from!==me)notes.push({id:`msg-${w.id}-${i}`,title:'New Message',body:`@${m.from}: ${m.text.slice(0,60)}`,thread:w.id})});
  }
  const unread=notes.filter(n=>!readNotes.includes(n.id));
- return <div className="content-page chat-page"><header className="auction-header"><Link to="/profile" className="chat-back"><ChevronLeft size={14}/>Profile</Link><span className="auction-kicker">SESSION DEMO · NO PUSH</span><div className="auction-title"><h1>Notifications<span>.</span></h1><Bell size={22}/></div><p className="subtle">{unread.length} unread · @{me}</p></header>
+ return <div className="content-page chat-page"><header className="auction-header"><Button variant="ghost" asChild className="chat-back"><Link to="/profile"><ChevronLeft size={14}/>Profile</Link></Button><span className="auction-kicker">SESSION DEMO · NO PUSH</span><div className="auction-title"><h1>Notifications<span>.</span></h1><Bell size={22}/></div><p className="subtle">{unread.length} unread · @{me}</p></header>
   {notes.length>0&&<Button variant="outline" size="sm" disabled={!unread.length} onClick={()=>markRead(notes.map(n=>n.id))}><CheckCheck/>Mark all as read</Button>}
   <section className="pending-offers">{notes.slice().reverse().map(n=>{const isRead=readNotes.includes(n.id);return <div key={n.id} onClick={()=>markRead([n.id])} aria-label={`${n.title} ${isRead?'read':'unread'}`}><span>{isRead?'':'● '}{n.title}</span><strong>{isRead?'Read':'New'}</strong><small>{n.body}{n.thread&&<> · <Link to="/chat" search={{thread:n.thread}}>Open chat</Link></>}</small></div>})}
   {!notes.length&&<div><span>No notifications yet</span></div>}</section>

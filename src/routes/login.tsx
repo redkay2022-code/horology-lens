@@ -17,7 +17,7 @@ function Login(){
   setError('');enter('buyer');
  };
  const enter=(r:'buyer'|'seller')=>{setRole(r);toast.success(`DEMO ${r==='buyer'?'Buyer':'Seller'} 계정으로 입장했습니다`,{description:'실제 로그인이나 계정 생성은 이루어지지 않았습니다.'});void navigate({to:'/profile'})};
- return <div className="content-page chat-page"><header className="auction-header"><Link to="/settings" className="chat-back"><ChevronLeft size={14}/>Settings</Link><span className="auction-kicker">DEMO · NO REAL ACCOUNTS</span><div className="auction-title"><h1>{mode==='login'?'Login':'Sign Up'}<span>.</span></h1></div></header>
+ return <div className="content-page chat-page"><header className="auction-header"><Button variant="ghost" asChild className="chat-back"><Link to="/settings"><ChevronLeft size={14}/>Settings</Link></Button><span className="auction-kicker">DEMO · NO REAL ACCOUNTS</span><div className="auction-title"><h1>{mode==='login'?'Login':'Sign Up'}<span>.</span></h1></div></header>
   <div className="studio-tabs" role="tablist" aria-label="Login or sign up">{(['login','signup'] as const).map(m=><Button key={m} variant="ghost" role="tab" aria-selected={mode===m} onClick={()=>{setMode(m);setError('')}}>{m==='login'?'Login':'Sign Up'}</Button>)}</div>
   <form className="profile-edit" noValidate onSubmit={e=>{e.preventDefault();submit()}}>
    {mode==='signup'&&<label>Name<input aria-label="Name" value={name} onChange={e=>setName(e.target.value)}/></label>}
