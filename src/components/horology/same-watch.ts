@@ -3,7 +3,7 @@ import type { Watch } from './data';
 export const norm = (s?: string) => (s ?? '').normalize('NFKD').toLowerCase().replace(/[“”"'’`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 export const normRef = (s?: string) => (s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-export type SameWatchKey = { brand: string; model: string; ref?: string };
+export type SameWatchKey = { brand: string; model: string; ref?: string | undefined };
 
 /** Brand + model always; exact normalized reference when the selected watch has one. */
 export function matchSameWatch(posts: Watch[], key: SameWatchKey): Watch[] {
