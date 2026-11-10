@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Bookmark, Check, Film, Heart, MessageCircle, Pencil, Plus, Send, Trash2, Watch as WatchIcon, Cog, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BottomSheet } from './sheets';
-import { PostGrid, PostVideo } from './server-video';
+import { PostGrid, PostVideo, resetPreloadGate } from './server-video';
 import { useCommunity } from './store';
 import { useSession, useProfile } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +32,7 @@ function SignInPrompt({ text }: { text: string }) {
 function Player({ posts, start, onClose }: { posts: ServerPost[]; start: number; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(start);
+  useState(resetPreloadGate); // once per player open, before children mount
   useEffect(() => { ref.current?.children[start]?.scrollIntoView(); }, [start]);
   return <div className="feed-page player-feed-page"><div className="snap-feed" ref={ref} tabIndex={0}>{posts.map((p, i) => <ServerVideoPost key={p.id} post={p} index={i} mode={playbackMode(i, active)} onVisible={setActive}/>)}</div><Button variant="ghost" size="icon" className="player-back" aria-label="Back to feed" onClick={onClose}><ArrowLeft size={20}/></Button></div>;
 }
@@ -39,7 +40,7 @@ function Player({ posts, start, onClose }: { posts: ServerPost[]; start: number;
 function ServerVideoPost({ post, index, mode, onVisible }: { post: ServerPost; index: number; mode: ReturnType<typeof playbackMode>; onVisible: (i: number) => void }) {
   const { user } = useSession();
   const inv = useInvalidate();
-  const likes = useLikes([post.id]).data ?? [];
+  const likes = useLikes(mode === 'idle' ? [] : [post.id]).data ?? []; // off-screen posts skip like reads so they don't compete with the active video
   const saves = useMyRows('post_saves', user?.id).data ?? [];
   const follows = useMyRows('collector_follows', user?.id).data ?? [];
   const watchFollows = useMyRows('watch_follows', user?.id).data ?? [];

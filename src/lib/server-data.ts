@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 // Server-mode data layer. All reads/writes go through the browser client so RLS
@@ -54,11 +54,34 @@ export const SIGNED_URL_TTL_S = 3600;
 const URL_REUSE_MS = (SIGNED_URL_TTL_S - 5 * 60) * 1000; // reuse until 5 minutes before expiry
 export const playbackKey = (path: string) => ['playback', path] as const;
 export async function fetchPlaybackUrl(path: string): Promise<string> {
+  markPlayback('url-req', path);
   const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, SIGNED_URL_TTL_S);
+  markPlayback('url-res', path);
   if (error || !data?.signedUrl) throw error ?? new Error('playback unavailable');
   return data.signedUrl;
 }
 export const playbackQuery = (path: string) => ({ queryKey: playbackKey(path), queryFn: () => fetchPlaybackUrl(path), staleTime: URL_REUSE_MS, gcTime: URL_REUSE_MS, retry: 1, refetchOnWindowFocus: false });
+/** Lightweight stage marks (performance.mark only) used to diagnose interaction-to-first-frame latency. */
+export const markPlayback = (stage: string, path: string) => { try { performance.mark(`wr:${stage}:${path}`); } catch { /* unsupported */ } };
+export const PREFETCH_LIMIT = 4;
+const inflight = new Set<string>();
+/**
+ * Authorizes up to PREFETCH_LIMIT published videos in one signed-URL batch and seeds the per-video cache.
+ * Only URLs are fetched (no media bytes); paths already cached or in flight are skipped, and storage policy still
+ * refuses unpublished files, which are simply left uncached.
+ */
+export async function prefetchPlaybackUrls(qc: QueryClient, paths: string[]): Promise<number> {
+  const todo = [...new Set(paths)].filter(p => p && !inflight.has(p) && qc.getQueryState(playbackKey(p))?.status !== 'success' && qc.getQueryState(playbackKey(p))?.fetchStatus !== 'fetching').slice(0, PREFETCH_LIMIT);
+  if (!todo.length) return 0;
+  todo.forEach(p => inflight.add(p));
+  try {
+    const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(todo, SIGNED_URL_TTL_S);
+    if (error || !data) return 0;
+    let n = 0;
+    for (const r of data) if (r.path && r.signedUrl && !r.error) { qc.setQueryData(playbackKey(r.path), r.signedUrl); n++; }
+    return n;
+  } finally { todo.forEach(p => inflight.delete(p)); }
+}
 export function usePlaybackUrl(path: string, enabled: boolean) {
   return useQuery({ ...playbackQuery(path), enabled });
 }

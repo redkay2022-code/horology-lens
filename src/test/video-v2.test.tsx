@@ -90,7 +90,7 @@ describe('fullscreen loading window', () => {
     const { rerender, container } = render(<PostVideo path={`${A}/a.mp4`} mode="active"/>, wrap(qc));
     await waitFor(() => expect(container.querySelector('video')).not.toBeNull());
     pause.mockClear(); play.mockClear();
-    rerender(<QueryClientProvider client={qc}><PostVideo path={`${A}/a.mp4`} mode="preload"/></QueryClientProvider>);
+    rerender(<PostVideo path={`${A}/a.mp4`} mode="preload"/>); // same instance, as inside the player
     expect(pause).toHaveBeenCalled();
     expect(play).not.toHaveBeenCalled();
   });
@@ -108,6 +108,8 @@ describe('playback URL requests', () => {
   });
   it('refreshes only the failing URL once, then shows a per-post failure state', async () => {
     const { container } = render(<><PostVideo path={`${A}/a.mp4`} mode="active"/><PostVideo path={`${A}/b.mp4`} mode="preload"/></>, wrap());
+    await waitFor(() => expect(container.querySelector('video')).not.toBeNull());
+    fireEvent.loadedData(container.querySelector('video')!); // V2.1: preload attaches after the active first frame
     await waitFor(() => expect(container.querySelectorAll('video')).toHaveLength(2));
     await act(async () => { fireEvent.error(container.querySelectorAll('video')[0]!); });
     await waitFor(() => expect(m.createSignedUrl.mock.calls.filter(c => c[0] === `${A}/a.mp4`)).toHaveLength(2));
