@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { BottomSheet } from './sheets';
 import { money, type Watch } from './data';
 import { useCommunity } from './store';
-import { auctionDisclaimer, canOffer, myOffer, offerStatus } from './auction';
+import { canOffer, myOffer, offerStatus } from './auction';
 
 export function OfferSheet({ watch, open, onClose }: { watch: Watch; open: boolean; onClose: () => void }) {
  const { auctions, now, submitOffer, simulateOutbid, me }=useCommunity();const navigate=useNavigate();
@@ -24,16 +24,16 @@ export function OfferSheet({ watch, open, onClose }: { watch: Watch; open: boole
   <div className="offer-sheet">
    <span className="auction-kicker">NON-BINDING OFFER · SESSION DEMO</span>
    {a?.outbid&&<Button variant="ghost" className="offer-alert" onClick={()=>choose(min)}><AlertTriangle size={16}/>Someone just offered {money(top)}! Tap to counter-offer.</Button>}
-   <div className="offer-watch"><img src={watch.image} alt={watch.model}/><div><small>{watch.brand}</small><strong>{watch.model}</strong><span>Ref. {watch.ref}</span><span className="owner-badge"><BadgeCheck size={12}/> Live Verified · DEMO</span></div></div>
-   <div className="offer-top"><small>Current Highest Offer</small><strong>{money(top)}</strong><span>Suggested Next Min Offer: {money(min)}</span>{leading&&!accepted&&<em>You hold the top offer</em>}</div>
+   <div className="offer-watch"><img src={watch.image} alt={watch.model}/><div><small>{watch.brand}</small><strong>{watch.model}</strong><span>Ref. {watch.ref}</span><span className="owner-badge"><BadgeCheck size={12}/> Verified Owner · DEMO</span></div></div>
+   <div className="offer-top"><small>Current Highest Offer</small><strong>{money(top)}</strong><span>Minimum Next Offer: {money(min)}</span>{leading&&!accepted&&<em>You hold the top offer</em>}</div>
    {!accepted&&<><div className="offer-quick">{[100,500,1000].filter(n=>n>=step).map(n=><Button key={n} variant="outline" aria-pressed={offer===top+n} disabled={!eligible} onClick={()=>choose(top+n)}>+{money(n)}</Button>)}</div>
    <label className="offer-input"><span>Custom offer · USD</span><input type="number" inputMode="numeric" min={min} step="1" disabled={!eligible} value={offer} aria-label="Custom offer amount" onChange={e=>choose(Number(e.target.value))}/></label>
-   <Button className="offer-submit" disabled={!eligible||!Number.isSafeInteger(offer)||offer<min} onClick={()=>{if(submitOffer(watch,offer))toast.success('Offer sent · seller notification simulated',{description:'Non-binding demo. No payment taken.'});else toast.error(`Minimum offer: ${money(min)}`)}}><Flame/>[ Submit {money(offer)} Offer ]</Button>
+   <Button className="offer-submit" disabled={!eligible||!Number.isSafeInteger(offer)||offer<min} onClick={()=>{if(submitOffer(watch,offer))toast.success('Offer sent · seller notification simulated',{description:'Non-binding demo. No payment taken.'});else toast.error(`Minimum offer: ${money(min)}`)}}><Flame/>Submit {money(offer)} Silent Bid</Button>
    {mine&&<p className="offer-receipt">Your offer: {money(mine.amount)} · {status}</p>}
-   <div className="offer-sim"><label><Switch checked={a?.outbid??false} disabled={!eligible} onCheckedChange={on=>simulateOutbid(watch,on)}/>Simulate Outbid Event</label></div>
+   <details className="offer-demo-tools"><summary>DEMO Tools</summary><div className="offer-sim"><label><Switch checked={a?.outbid??false} disabled={!eligible} onCheckedChange={on=>simulateOutbid(watch,on)}/>Simulate Outbid Event</label></div></details>
    <p className="offer-locked"><Lock size={13}/>{eligible?'Private 1:1 chat unlocks after seller acceptance.':'This auction has ended.'}</p></>}
    {accepted&&(a?.buyer===me?<><div className="accepted-notice"><BadgeCheck size={16}/>Offer accepted · Private lounge unlocked</div><Button className="offer-submit" onClick={()=>void navigate({to:'/chat',search:{thread:watch.id}})}>Open 1:1 Chat</Button></>:<p className="offer-locked"><Lock size={13}/>{mine?`Your offer: ${status}`:'Offers closed'} · seller accepted another offer</p>)}
-   <p className="auction-disclaimer">{auctionDisclaimer}</p><p className="auction-disclaimer">All offers, notifications, acceptance and messages are simulated for this session. No payments or escrow.</p>
+   <p className="auction-disclaimer">Silent Bids are non-binding · session demo · no payments or escrow.</p>
   </div>
  </BottomSheet>;
 }
