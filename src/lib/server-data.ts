@@ -28,6 +28,9 @@ export function usePosts(filter: PostFilter = {}, enabled = true) {
   return useQuery({
     queryKey: ['posts', filter],
     enabled,
+    // Signed URLs last 1h; refetch before expiry so long sessions keep playing.
+    refetchInterval: 45 * 60_000,
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<ServerPost[]> => {
       let q = supabase.from('posts').select(POST_COLS).order('created_at', { ascending: false }).limit(60);
       if (filter.authorId) q = q.eq('author_id', filter.authorId);

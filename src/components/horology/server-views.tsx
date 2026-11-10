@@ -10,6 +10,7 @@ import { useCommunity } from './store';
 import { useSession, useProfile } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { listConfirmedCatalog, type CatalogRecord } from '@/lib/catalog.functions';
+import { identifyWatch, type IdResult } from '@/lib/identify.functions';
 import { listMyWatches, addMyWatch, updateMyWatch, deleteMyWatch, type OwnedWatchInput } from '@/lib/collection.functions';
 import { usePosts, useLikes, useMyRows, useFollowCounts, useComments, toggleRow, uploadPost, deletePost, useInvalidate, validateVideoFile, type ServerPost, type PostFilter } from '@/lib/server-data';
 
@@ -58,7 +59,7 @@ function ServerVideoPost({ post }: { post: ServerPost }) {
   };
   const own = user?.id === post.author_id;
   return <article className="video-post" ref={el} aria-label={`${label(post)} video`}>
-    {post.url ? <video ref={video} className="watch-video" src={post.url} muted loop playsInline preload="metadata" controls={false} onClick={e => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}/> : <div className="discover-empty"><Film/><p>Video unavailable</p></div>}
+    {post.url ? <video ref={video} className="watch-video" src={post.url} muted loop playsInline preload="metadata" controls={false} onError={() => toast.error('이 브라우저에서 재생할 수 없는 영상 형식입니다 (MOV는 일부 브라우저 미지원).')} onClick={e => { const v = e.currentTarget; if (v.paused) void v.play(); else v.pause(); }}/> : <div className="discover-empty"><Film/><p>Video unavailable</p></div>}
     <div className="video-shade"/>
     <div className="video-actions">
       <div className="creator-follow"><Button variant="ghost" className="creator-avatar" asChild><Link to="/creator/$handle" params={{ handle: post.author?.handle ?? '' }} aria-label={`Open @${post.author?.handle} profile`}>{(post.author?.display_name || post.author?.handle || '?').slice(0, 2).toUpperCase()}</Link></Button>{!own && <Button variant="follow" size="icon" aria-label={following ? 'Unfollow creator' : 'Follow creator'} aria-pressed={following} className={following ? 'is-following' : ''} onClick={() => act('collector_follows', post.author_id, !following, ['collector_follows', 'follow-counts'])}>{following ? <Check/> : <Plus/>}</Button>}</div>
@@ -111,6 +112,24 @@ export function ServerFeed() {
     <div className="feed-grid-scroll">{tab === 'Following' && !user ? <SignInPrompt text="Sign in to see collectors and watches you follow."/> : isLoading ? <p className="discovery-footer">Loading films…</p> : error ? <div className="empty-feed"><h2>Could not load films</h2><p>{errMsg(error)}</p></div> : posts.length ? <PostGrid posts={posts} onOpen={setOpen}/> : <div className="empty-feed follow-empty"><WatchIcon/><h2>{tab === 'For You' ? 'No films yet' : sub === 'Collectors' ? 'No posts from followed collectors' : 'No posts for followed watches'}</h2><p>{tab === 'For You' ? 'Be the first to share a wrist story with the + button.' : 'Follow from a film to fill this tab.'}</p></div>}</div></div>;
 }
 
+function IdentifyPanel({ catalog, onPickCatalog, onPickManual }: { catalog: CatalogRecord[]; onPickCatalog: (id: string) => void; onPickManual: (c: { brand: string; model: string; reference: string }) => void }) {
+  const identify = useServerFn(identifyWatch);
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<IdResult | null>(null);
+  const run = async (file: File) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { toast.error('JPEG/PNG/WebP 5MB 이하 사진만 가능합니다.'); return; }
+    const image = await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = no; r.readAsDataURL(file); });
+    setBusy(true); setRes(null);
+    try { const r = await identify({ data: { image } }); setRes(r); if (r.error) toast.error(r.error); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  };
+  return <div className="details-extra" aria-label="AI watch identification">
+    <label>Identify from a photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Watch photo" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) void run(f); }}/></label>
+    {busy && <small>Identifying…</small>}
+    {res && !res.error && (res.candidates.length ? res.candidates.map((c, i) => { const m = res.matches.find(x => x.candidateIndex === i); const rec = m && catalog.find(r => r.id === m.catalogId); return <div key={i}><small>AI 추정 후보 · {Math.round(c.confidence * 100)}%</small><strong>{c.brand} {c.model}{c.reference ? ` · ${c.reference}` : ''}</strong>{rec ? <Button type="button" size="sm" variant="outline" onClick={() => onPickCatalog(rec.id)}>Confirm: {rec.reference} · {rec.caseSizeMm}mm</Button> : <Button type="button" size="sm" variant="ghost" onClick={() => onPickManual({ brand: c.brand, model: c.model, reference: c.reference ?? '' })}>Use as unconfirmed</Button>}</div>; }) : <small>No watch recognised. Choose manually.</small>)}
+    <small className="demo-label">AI 추정 결과이며 진품·소유 인증이 아닙니다 · 사진은 저장되지 않습니다</small>
+  </div>;
+}
+
 /* ---------------- Upload ---------------- */
 
 export function ServerUploadSheet() {
@@ -138,6 +157,7 @@ export function ServerUploadSheet() {
   return <BottomSheet open={uploadOpen} onClose={closeUpload} title="Share a wrist story">{!user ? <SignInPrompt text="Sign in to upload a watch video."/> : <form className="profile-edit" onSubmit={e => { e.preventDefault(); void submit(); }}>
     <label>Video (MP4/WebM/MOV, ≤100MB)<input type="file" accept="video/mp4,video/webm,video/quicktime" aria-label="Video file" onChange={e => { const f = e.target.files?.[0] ?? null; const bad = f && validateVideoFile(f); if (bad) { toast.error(bad); e.target.value = ''; setFile(null); } else setFile(f); }}/></label>
     {preview && <video src={preview} className="upload-preview" muted loop autoPlay playsInline style={{ width: '100%', maxHeight: 260, objectFit: 'contain' }}/>}
+    <IdentifyPanel catalog={catalog} onPickCatalog={setCatalogId} onPickManual={c => { setCatalogId(''); setManual(c); }}/>
     <label>Confirmed model<select aria-label="Confirmed model" value={catalogId} onChange={e => setCatalogId(e.target.value)}><option value="">Not listed / unconfirmed</option>{catalog.map(c => <option key={c.id} value={c.id}>{c.brand} {c.model} · {c.reference} · {c.caseSizeMm}mm</option>)}</select></label>
     {!catalogId && <><label>Brand<input aria-label="Brand" maxLength={60} value={manual.brand} onChange={e => setManual({ ...manual, brand: e.target.value })}/></label><label>Model<input aria-label="Model" maxLength={80} value={manual.model} onChange={e => setManual({ ...manual, model: e.target.value })}/></label><label>Reference (optional)<input aria-label="Reference" maxLength={40} value={manual.reference} onChange={e => setManual({ ...manual, reference: e.target.value })}/></label></>}
     <label>Caption<textarea aria-label="Caption" maxLength={1000} value={caption} onChange={e => setCaption(e.target.value)}/></label>
