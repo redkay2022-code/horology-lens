@@ -24,6 +24,7 @@ export function UploadStudio() {
  const [bgm, setBgm] = useState(false);
  const [duration, setDuration] = useState(6);
  const [trim, setTrim] = useState<[number, number]>([0, 6]);
+  const [baseId,setBaseId]=useState(watches[0].id);
   const [missionTime,setMissionTime]=useState('04:20');
  const input = useRef<HTMLInputElement>(null);
  const video = useRef<HTMLVideoElement>(null);
@@ -51,7 +52,7 @@ export function UploadStudio() {
  };
  const publish = () => {
    if (stage !== 'preview' || (mode === 'gallery' && !media)) return;
-  const base = watches[0];
+  const base = (mode === 'gallery' && watches.find(w => w.id === baseId)) || watches[0];
   addUpload({ ...base, id: `upload-${Date.now()}`, creator: 'alex.morgan', initials: 'AM', likes: 0, saves: 0, comments: 0,
    video: mode === 'live' ? base.video : media,
    is_live_verified: mode === 'live', foundingMember: false,
@@ -83,6 +84,7 @@ export function UploadStudio() {
    {mode === 'live' ? <>
     {stage === 'ready' && <Button className="studio-primary" onClick={getMission}><Target size={17}/> 미션 받기</Button>}
     {(stage === 'armed' || stage === 'recording') && <div className="studio-record-controls"><span>{missionTime} + ✌️</span><Button variant="ghost" className={`studio-record-button ${stage === 'recording' ? 'is-recording' : ''}`} aria-label="3초 촬영 시작" disabled={stage === 'recording'} onClick={() => { setRecording(3); setStage('recording'); }}><i/></Button><span>3 SEC</span></div>}
+    {stage === 'armed' && <Button variant="ghost" className="studio-retake" onClick={reset}><X size={14}/> 미션 취소</Button>}
     {livePreview && <><Button variant="ghost" className="studio-retake" onClick={() => { setStage('ready'); setExpires(null); }}><RotateCcw size={14}/> 다시 촬영</Button><Button className="studio-primary" onClick={publish}><Check size={16}/> 인증 숏폼 게시하기</Button></>}
     <p className="studio-disclaimer">데모 카메라 · 소유 인증 및 서버 토큰은 시뮬레이션입니다.</p>
    </> : <>
@@ -92,10 +94,11 @@ export function UploadStudio() {
     {tool === 'filters' && <div className="studio-filter-options">{(Object.keys(filters) as (keyof typeof filters)[]).map(f => <Button key={f} variant="outline" size="sm" aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</Button>)}</div>}
     {tool === 'trim' && <div className="studio-trim">{(['시작', '끝'] as const).map((label, i) => <label key={label}>{label} · {trim[i]?.toFixed(1)}s<input aria-label={label} type="range" min="0" max={duration} step="0.1" value={trim[i]} onChange={e => { const n = Number(e.target.value); setTrim(i === 0 ? [Math.min(n, trim[1] - .1), trim[1]] : [trim[0], Math.max(n, trim[0] + .1)]); }}/></label>)}</div>}
     {tool === 'bgm' && <Button variant="outline" aria-pressed={bgm} onClick={() => setBgm(!bgm)}><Music2 size={15}/>{bgm ? '✓ ' : ''}Midnight Escapement · Demo</Button>}
+    {media && <label className="offer-input"><span>시계 정보 · Watch</span><select aria-label="시계 정보 선택" value={baseId} onChange={e => setBaseId(e.target.value)}>{watches.map(w => <option key={w.id} value={w.id}>{w.brand} {w.model}</option>)}</select></label>}
     <Button className="studio-primary" disabled={!media} onClick={publish}><Check size={16}/> 피드에 게시하기</Button>
     <p className="studio-disclaimer">Display Only · 세션 내 게시 · BGM 오디오는 시뮬레이션입니다.</p>
    </>}
   </div>
-  <Dialog.Root open={mission} onOpenChange={setMission}><Dialog.Portal><Dialog.Overlay className="studio-mission-backdrop"/><Dialog.Content className="studio-mission" aria-describedby="mission-description"><div className="studio-mission-top"><Target size={23}/><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="미션 닫기"><X size={17}/></Button></Dialog.Close></div><Dialog.Title>🎯 실시간 소유 인증 미션</Dialog.Title><p className="studio-mission-subtitle">LIVE TIME CHALLENGE / DEMO</p><div className="studio-mission-box" id="mission-description">시계 바늘을 <strong>[ {missionTime} ]</strong>에 맞추고,<br/>손가락 ✌️(V)를 한 채<br/><strong>3초간 촬영하세요.</strong></div><div className="studio-mission-clock"><Clock3 size={17}/><strong>{`${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`}</strong><span>미션 유효 시간</span></div><Button className="studio-primary" onClick={() => { setMission(false); setStage('armed'); }}><Camera size={16}/> 미션 시작 및 촬영</Button><p className="studio-disclaimer">실제 카메라·서버 검증 없이 진행되는 데모입니다.</p></Dialog.Content></Dialog.Portal></Dialog.Root>
+  <Dialog.Root open={mission} onOpenChange={o => { setMission(o); if (!o && stage === 'ready') { setExpires(null); setRemaining(180); } }}><Dialog.Portal><Dialog.Overlay className="studio-mission-backdrop"/><Dialog.Content className="studio-mission" aria-describedby="mission-description"><div className="studio-mission-top"><Target size={23}/><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="미션 닫기"><X size={17}/></Button></Dialog.Close></div><Dialog.Title>🎯 실시간 소유 인증 미션</Dialog.Title><p className="studio-mission-subtitle">LIVE TIME CHALLENGE / DEMO</p><div className="studio-mission-box" id="mission-description">시계 바늘을 <strong>[ {missionTime} ]</strong>에 맞추고,<br/>손가락 ✌️(V)를 한 채<br/><strong>3초간 촬영하세요.</strong></div><div className="studio-mission-clock"><Clock3 size={17}/><strong>{`${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`}</strong><span>미션 유효 시간</span></div><Button className="studio-primary" onClick={() => { setMission(false); setStage('armed'); }}><Camera size={16}/> 미션 시작 및 촬영</Button><p className="studio-disclaimer">실제 카메라·서버 검증 없이 진행되는 데모입니다.</p></Dialog.Content></Dialog.Portal></Dialog.Root>
  </BottomSheet>;
 }
