@@ -13,7 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActiveBidsRouteImport } from './routes/active-bids'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WatchboxRouteImport } from './routes/watchbox'
 
 const IndexRoute = IndexRouteImport.update({
@@ -36,9 +39,24 @@ const DiscoverRoute = DiscoverRouteImport.update({
   path: '/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WatchboxRoute = WatchboxRouteImport.update({
@@ -52,7 +70,10 @@ export interface FileRoutesByFullPath {
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
+  '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
 }
 export interface FileRoutesByTo {
@@ -60,7 +81,10 @@ export interface FileRoutesByTo {
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
+  '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
 }
 export interface FileRoutesById {
@@ -69,22 +93,45 @@ export interface FileRoutesById {
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
   '/discover': typeof DiscoverRoute
+  '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/active-bids' | '/chat' | '/discover' | '/profile' | '/watchbox'
+    | '/'
+    | '/active-bids'
+    | '/chat'
+    | '/discover'
+    | '/login'
+    | '/notifications'
+    | '/profile'
+    | '/settings'
+    | '/watchbox'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/active-bids' | '/chat' | '/discover' | '/profile' | '/watchbox'
+  to:
+    | '/'
+    | '/active-bids'
+    | '/chat'
+    | '/discover'
+    | '/login'
+    | '/notifications'
+    | '/profile'
+    | '/settings'
+    | '/watchbox'
   id:
     | '__root__'
     | '/'
     | '/active-bids'
     | '/chat'
     | '/discover'
+    | '/login'
+    | '/notifications'
     | '/profile'
+    | '/settings'
     | '/watchbox'
   fileRoutesById: FileRoutesById
 }
@@ -93,7 +140,10 @@ export interface RootRouteChildren {
   ActiveBidsRoute: typeof ActiveBidsRoute
   ChatRoute: typeof ChatRoute
   DiscoverRoute: typeof DiscoverRoute
+  LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   WatchboxRoute: typeof WatchboxRoute
 }
 
@@ -127,11 +177,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/watchbox': {
@@ -149,7 +220,10 @@ const rootRouteChildren: RootRouteChildren = {
   ActiveBidsRoute: ActiveBidsRoute,
   ChatRoute: ChatRoute,
   DiscoverRoute: DiscoverRoute,
+  LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
   WatchboxRoute: WatchboxRoute,
 }
 export const routeTree = rootRouteImport
