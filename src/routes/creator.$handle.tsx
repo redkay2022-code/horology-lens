@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { WatchFeed } from '@/components/horology/feed';
 import { pageHead, type Watch } from '@/components/horology/data';
 import { useCommunity } from '@/components/horology/store';
+import { isDemoMode } from '@/lib/backend-mode';
+import { ServerCreator } from '@/components/horology/server-views';
 
 export const Route = createFileRoute('/creator/$handle')({
   head: ({ params }) => pageHead(`@${params.handle} · Collector`, `Public watch posts shared by collector @${params.handle} on WRISTORY.`),
-  component: CreatorProfile,
+  component: () => isDemoMode ? <CreatorProfile/> : <ServerCreator handle={Route.useParams().handle}/>,
 });
 
 const tabs = ['All Posts', 'Verified', 'Display Only'] as const;
