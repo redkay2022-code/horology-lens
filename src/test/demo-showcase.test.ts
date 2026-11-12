@@ -32,11 +32,11 @@ import { demoShowcaseAll, demoCollectorByHandle } from '@/components/horology/de
 import { UNVERIFIED_LABELS } from '@/components/horology/sheets';
 describe('P1 presentation hardening', () => {
   it('keeps all 60 internally but feeds only media posts, videos first', () => {
-    expect(demoShowcaseAll).toHaveLength(60);
-    expect(demoShowcaseFeed).toHaveLength(9);
-    expect(demoShowcaseFeed.slice(0, 3).every(w => w.video)).toBe(true);
-    expect(demoShowcaseFeed.slice(3).every(w => !w.video && w.image)).toBe(true);
-    expect(auctionPosts.filter(w => w.id.startsWith('demo-'))).toHaveLength(9);
+    expect(demoShowcaseAll).toHaveLength(69);
+    expect(demoShowcaseFeed).toHaveLength(19);
+    expect(demoShowcaseFeed.slice(0, 13).every(w => w.video)).toBe(true);
+    expect(demoShowcaseFeed.slice(13).every(w => !w.video && w.image)).toBe(true);
+    expect(auctionPosts.filter(w => w.id.startsWith('demo-'))).toHaveLength(19);
   });
   it('marks every showcase post unverified with explicit labels', () => {
     expect(demoShowcaseAll.every(w => w.unverified === true && w.ref === '')).toBe(true);
@@ -57,12 +57,31 @@ describe('V3 stable ID media mapping', () => {
   it('maps the 3 videos and 6 photos to the approved IDs', () => {
     const by = (id: string) => demoShowcasePosts.find(p => p.demoPostId === id)!;
     expect(['demo-01', 'demo-07', 'demo-13'].map(id => [by(id).model, by(id).videoAsset?.split('/').pop()])).toEqual([['Submariner', 'submariner.webm'], ['Royal Oak', 'royal-oak.webm'], ['Nautilus', 'nautilus.webm']]);
-    expect(demoShowcasePosts.filter(p => p.videoAsset).map(p => p.demoPostId)).toEqual(['demo-01', 'demo-07', 'demo-13']);
+    expect(demoShowcasePosts.filter(p => p.videoAsset).map(p => p.demoPostId)).toEqual(['demo-01', 'demo-07', 'demo-12', 'demo-13']);
     expect(demoShowcasePosts.filter(p => !p.videoAsset && p.thumbnailAsset).map(p => p.demoPostId).sort()).toEqual(['demo-02', 'demo-14', 'demo-19', 'demo-25', 'demo-31', 'demo-34']);
-    expect(demoShowcasePosts.filter(p => !p.thumbnailAsset)).toHaveLength(51);
+    expect(demoShowcasePosts.filter(p => !p.thumbnailAsset)).toHaveLength(50);
   });
   it('keeps IDs, collectors and media when the catalog order changes', () => {
     const reversed = Object.fromEntries(Object.entries(demoShowcaseCatalog).reverse().map(([b, es]) => [b, [...es].reverse()]));
     expect(sig(buildDemoShowcasePosts(reversed))).toEqual(sig(demoShowcasePosts));
+  });
+});
+
+import { demoShowcaseV4Posts } from '@/components/horology/demo-showcase';
+describe('V4 Phase A owner-declared videos', () => {
+  const all = [...demoShowcasePosts, ...demoShowcaseV4Posts];
+  it('adds demo-61..demo-69 without colliding with demo-01..demo-60', () => {
+    expect(demoShowcaseV4Posts.map(p => p.demoPostId)).toEqual(Array.from({ length: 9 }, (_, i) => `demo-${61 + i}`));
+    expect(new Set(all.map(p => p.demoPostId)).size).toBe(69);
+  });
+  it('maps each of the 10 source files to exactly one post with its own mp4 and poster', () => {
+    const map = Object.fromEntries(all.filter(p => p.sourceFile).map(p => [p.sourceFile, p.demoPostId]));
+    expect(map).toEqual({ '144821': 'demo-12', '144820': 'demo-61', '144815': 'demo-62', '144826': 'demo-63', '144816': 'demo-64', '144817': 'demo-65', '144818': 'demo-66', '144819': 'demo-67', '144829': 'demo-68', '144828': 'demo-69' });
+    for (const p of all.filter(p => p.sourceFile)) { expect(p.videoAsset).toMatch(new RegExp(`wristory_${p.sourceFile}\\.mp4$`)); expect(p.thumbnailAsset).toMatch(new RegExp(`wristory_${p.sourceFile}_poster\\.jpg$`)); }
+  });
+  it('labels rights owner-declared and never invents prices or verified specs', () => {
+    for (const p of all.filter(p => p.sourceFile)) { expect(p.rightsStatus).toBe('OWNER_DECLARED'); expect(p.price).toBeNull(); expect(p.specVerification).toBe('unverified'); expect(p.reference).toBeNull(); }
+    expect(demoShowcasePosts.find(p => p.demoPostId === 'demo-12')!.model).toBe('Royal Oak Perpetual Calendar');
+    expect(demoShowcaseAll.filter(w => w.video)).toHaveLength(13);
   });
 });

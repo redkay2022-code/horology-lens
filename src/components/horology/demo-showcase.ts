@@ -12,6 +12,11 @@ import apVideo from '@/assets/royal-oak.webm.asset.json';
 import ppVideo from '@/assets/nautilus.webm.asset.json';
 import { watches, type Watch } from './data';
 
+// V4 Phase A: owner-declared media registered through lovable-assets (pointer files only).
+const v4Files = import.meta.glob<{ url: string }>('@/assets/v4/*.asset.json', { eager: true, import: 'default' });
+const v4 = (name: string) => { const f = Object.entries(v4Files).find(([k]) => k.endsWith(`/${name}.asset.json`)); if (!f) throw new Error(`missing V4 asset ${name}`); return f[1].url; };
+const v4Media = (src: string) => ({ thumb: v4(`v${src}_poster.jpg`), video: v4(`v${src}.mp4`) });
+
 /**
  * INVESTOR DEMO ONLY. Fictional collectors and illustrative posts. Never written to the database,
  * never shown in SERVER mode (server-views replaces the demo feed). Brand and model names are real;
@@ -23,6 +28,8 @@ export type DemoShowcasePost = {
   demoPostId: string; brand: string; model: string; reference: null; title: string; caption: string; contentType: string;
   demoCollectorId: string; mediaStatus: MediaStatus; videoAsset: string | null; thumbnailAsset: string | null;
   specVerification: 'unverified'; price: null; isDemo: true;
+  /** V4 only: source file, owner-declared rights (not independently verified) and identification basis. */
+  sourceFile?: string; rightsStatus?: 'OWNER_DECLARED'; identification?: 'user-supplied' | 'unverified'; userReference?: string;
 };
 
 const c = (id: string, handle: string, displayName: string, focus: string, bio: string, brands: string[]): DemoCollector => ({ demoCollectorId: id, handle, displayName, focus, bio, brands, isDemo: true });
@@ -47,6 +54,12 @@ export const demoShowcaseMedia: Record<string, { thumb: string; video?: string }
   'demo-07': { thumb: royalOak, video: apVideo.url }, 'demo-13': { thumb: nautilus, video: ppVideo.url },
   'demo-14': { thumb: aquanaut }, 'demo-25': { thumb: santos }, 'demo-19': { thumb: rm },
   'demo-31': { thumb: overseas }, 'demo-34': { thumb: lange },
+  'demo-12': v4Media('144821'),
+};
+
+/** V4 annotations for existing posts that received owner-declared media (title/model unchanged). */
+const v4Existing: Record<string, Pick<DemoShowcasePost, 'sourceFile' | 'rightsStatus' | 'identification' | 'userReference'>> = {
+  'demo-12': { sourceFile: '144821', rightsStatus: 'OWNER_DECLARED', identification: 'user-supplied', userReference: '26574BC.OO.1220BC.02' },
 };
 
 /** IDs are explicit and permanent; never renumber. */
@@ -152,9 +165,29 @@ export const buildDemoShowcasePosts = (cat: Record<string, Entry[]>): DemoShowca
   return { demoPostId: id, brand, model, reference: null, title, caption, contentType,
     demoCollectorId: demoCollectors[(num - 1) % demoCollectors.length]!.demoCollectorId,
     mediaStatus: m?.video ? 'ready' : 'pending', videoAsset: m?.video ?? null, thumbnailAsset: m?.thumb ?? null,
-    specVerification: 'unverified', price: null, isDemo: true } satisfies DemoShowcasePost;
+    specVerification: 'unverified', price: null, isDemo: true, ...v4Existing[id] } satisfies DemoShowcasePost;
 }));
+/** The original 60-post dataset (demo-01..demo-60). */
 export const demoShowcasePosts: DemoShowcasePost[] = buildDemoShowcasePosts(demoShowcaseCatalog);
+
+/** V4 Phase A new posts. Explicit IDs from demo-61; never derived from position. Variants that differ from demo-03/31/33 are separate posts. */
+type V4Entry = [id: string, src: string, collector: string, brand: string, model: string, ident: 'user-supplied' | 'unverified', type: string, title: string, caption: string, ref?: string];
+const v4Entries: V4Entry[] = [
+  ['demo-61', '144820', 'dc04', 'Patek Philippe', 'Aquanaut Luce Annual Calendar', 'user-supplied', 'Wrist Roll', 'Annual calendar, softer edges', 'The Luce take on the Aquanaut, turning slowly under warm light.', '5261R-001'],
+  ['demo-62', '144815', 'dc05', 'Audemars Piguet', 'Royal Oak Double Balance Wheel Openworked', 'user-supplied', 'Movement Appreciation', 'Two balances, one open dial', 'Openworked bridges let the double balance do all the talking.'],
+  ['demo-63', '144826', 'dc07', 'Jacob & Co.', 'Bugatti Chiron Tourbillon', 'user-supplied', 'Design Details', 'An engine block on the wrist', 'Automotive cues and a tourbillon in a case that refuses to be quiet. Video match pending review.'],
+  ['demo-64', '144816', 'dc09', 'Custom', 'Daytona-Style Skeleton Chronograph', 'unverified', 'Dial Macro', 'A skeleton study in chronograph form', 'A customised Daytona-style piece with an open dial. Maker and details unverified.'],
+  ['demo-65', '144817', 'dc12', 'Custom', 'Daytona-Style Ice Blue Chronograph', 'unverified', 'Wrist Roll', 'Ice blue in passing light', 'A pale blue chronograph dial catching the light on a short roll. Details unverified.'],
+  ['demo-66', '144818', 'dc06', 'Custom', 'Diamond-Set Skeleton Daytona-Style Chronograph', 'unverified', 'Dial Macro', 'Sparkle over an open movement', 'Set stones and a skeleton dial, filmed up close. Stones and materials unverified.'],
+  ['demo-67', '144819', 'dc03', 'Custom', 'GMT-Master II-Style Gem-Set', 'unverified', 'Design Details', 'A gem-set take on the travel watch', 'A customised GMT-style piece, filmed for the setting rather than the specs. Details unverified.'],
+  ['demo-68', '144829', 'dc08', 'Vacheron Constantin', 'Overseas Tourbillon-Style', 'unverified', 'Wrist Roll', 'A tourbillon behind the Overseas bezel', 'A short roll showing an Overseas-style case with a tourbillon aperture. Exact model unverified.'],
+  ['demo-69', '144828', 'dc11', 'Vacheron Constantin', 'Calendar Chronograph-Style', 'unverified', 'Collector\'s Perspective', 'Calendar and chronograph, side by side', 'A classical calendar chronograph layout from Geneva. Collection and reference unverified.'],
+];
+export const demoShowcaseV4Posts: DemoShowcasePost[] = v4Entries.map(([id, src, collector, brand, model, ident, contentType, title, caption, ref]) => {
+  const m = v4Media(src);
+  return { demoPostId: id, brand, model, reference: null, title, caption, contentType, demoCollectorId: collector, mediaStatus: 'ready', videoAsset: m.video, thumbnailAsset: m.thumb,
+    specVerification: 'unverified', price: null, isDemo: true, sourceFile: src, rightsStatus: 'OWNER_DECLARED', identification: ident, ...(ref ? { userReference: ref } : {}) } satisfies DemoShowcasePost;
+});
 
 const U = 'Unverified';
 const neutralDetails: Watch['details'] = { overview: 'Investor demo post. Specifications are unverified and not manufacturer data.', caliber: U, powerReserve: U, frequency: U, jewels: 0, winding: U, lugWidth: U, caseMaterial: U, caseback: U, dialFinish: U, crystal: U, bezelDetail: U, bracelet: U, clasp: U, waterDetail: U };
@@ -162,11 +195,11 @@ const neutralDetails: Watch['details'] = { overview: 'Investor demo post. Specif
 /** Adapter into the existing feed type. No offers (Display Only), no prices, no specs; empty video stays empty. */
 const { music: _m, identity: _i, edit: _e, auction: _a, ...plainBase } = watches[0];
 /** Full internal set (60), including posts still waiting for media. */
-export const demoShowcaseAll: Watch[] = demoShowcasePosts.map((p, i) => {
+export const demoShowcaseAll: Watch[] = [...demoShowcasePosts, ...demoShowcaseV4Posts].map((p, i) => {
   const who = demoCollectors.find(x => x.demoCollectorId === p.demoCollectorId)!;
   return { ...plainBase, id: p.demoPostId, brand: p.brand, model: p.model, ref: '', year: 0, image: p.thumbnailAsset ?? '', video: p.videoAsset ?? '',
     creator: who.handle, initials: who.handle.slice(0, 2).toUpperCase(),
-    caption: `${p.title}\n${p.caption}\n${p.contentType} · DEMO${p.mediaStatus === 'ready' ? '' : ' · Media pending'}`,
+    caption: `${p.title}\n${p.caption}\n${p.userReference ? `Ref. ${p.userReference} (user-supplied, not authenticated)\n` : ''}${p.contentType} · DEMO${p.mediaStatus === 'ready' ? '' : ' · Media pending'}${p.rightsStatus ? ' · Owner-declared media' : ''}`,
     tags: `#${p.brand.replace(/[^A-Za-z]/g, '')} #DEMO`, likes: 120 + i * 7, comments: 3 + (i % 9), saves: 10 + (i % 13),
     wrist: 0, diameter: 0, thickness: 0, lug: U, movement: U, type: U, reserve: 0, vph: U, dial: U, bezel: U, water: U, retail: 0, market: 0,
     category: [], details: neutralDetails, is_live_verified: false, foundingMember: false, unverified: true };
