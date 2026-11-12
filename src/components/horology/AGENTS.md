@@ -1,0 +1,2 @@
+- DemoRouteContext keeps collector links inside /demo.
+- The shell derives demo scope from the URL (isDemoPath, DEV-only) and publishes it to the community provider: inside /demo, auctions are seeded session-only from existing auctionPosts data and exposed only while in scope, and every creation entry is refused with no real upload sheet mounted, so demo bids never reach real pages or server writes.
