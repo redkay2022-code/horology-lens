@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { WatchFeed } from '@/components/horology/feed';
+import { DemoRouteContext } from '@/components/horology/demo-route';
 
 // Phase A/B investor demo feed for the Lovable development preview only.
 // import.meta.env.DEV is replaced at build time, so production builds (published site) always 404 here.
@@ -15,5 +16,5 @@ export const Route = createFileRoute('/demo')({
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' },
     { name: 'robots', content: 'noindex, nofollow' },
   ] }),
-  component: () => (demoRouteEnabled() ? <WatchFeed/> : null),
+  component: () => (demoRouteEnabled() ? <DemoRouteContext.Provider value={true}><WatchFeed/></DemoRouteContext.Provider> : null),
 });
