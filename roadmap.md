@@ -32,3 +32,13 @@
 - [x] Verify Instagram preview updates, overlay toggle and native publishing
 - [x] Add distraction-free macro drag/pinch inspection and smooth exit
 - [x] Verify macro playback, bounds, pan, touch zoom and restored controls
+
+# Phase A approved / Phase B hold (baseline 068867c)
+- [x] Phase A: 10 video + 10 poster assets, 13 distinct videos, 29 For You cards, 19/19 tests, typecheck/build PASS, SERVER/G3 unchanged — CTO APPROVED
+- [ ] Deferred 1: improve poster for 144821
+- [ ] Deferred 2: preserve current 3:4 presentation unless a visible defect is confirmed
+- [ ] Deferred 3: keep demo-63 model identification unverified
+- [ ] Deferred 4: review duplicates in other feed tabs separately
+- [ ] Deferred 5: expand to 30 distinct video assets
+- [ ] Phase B: 13 videos -> 30 target, 17 remaining; wait for user-supplied video assets; no placeholder generation, no scraping; preserve all post IDs and media connections
+- [ ] Blocked: no new implementation authorized; DO NOT DEPLOY; WAIT FOR NEXT CTO INSTRUCTION
