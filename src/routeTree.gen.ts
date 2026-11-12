@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActiveBidsRouteImport } from './routes/active-bids'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MultiImagePreviewRouteImport } from './routes/multi-image-preview'
@@ -36,6 +37,11 @@ const ActiveBidsRoute = ActiveBidsRouteImport.update({
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiscoverRoute = DiscoverRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
+  '/demo': typeof DemoRoute
   '/discover': typeof DiscoverRoute
   '/login': typeof LoginRoute
   '/multi-image-preview': typeof MultiImagePreviewRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
+  '/demo': typeof DemoRoute
   '/discover': typeof DiscoverRoute
   '/login': typeof LoginRoute
   '/multi-image-preview': typeof MultiImagePreviewRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/active-bids': typeof ActiveBidsRoute
   '/chat': typeof ChatRoute
+  '/demo': typeof DemoRoute
   '/discover': typeof DiscoverRoute
   '/login': typeof LoginRoute
   '/multi-image-preview': typeof MultiImagePreviewRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/active-bids'
     | '/chat'
+    | '/demo'
     | '/discover'
     | '/login'
     | '/multi-image-preview'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/active-bids'
     | '/chat'
+    | '/demo'
     | '/discover'
     | '/login'
     | '/multi-image-preview'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/active-bids'
     | '/chat'
+    | '/demo'
     | '/discover'
     | '/login'
     | '/multi-image-preview'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActiveBidsRoute: typeof ActiveBidsRoute
   ChatRoute: typeof ChatRoute
+  DemoRoute: typeof DemoRoute
   DiscoverRoute: typeof DiscoverRoute
   LoginRoute: typeof LoginRoute
   MultiImagePreviewRoute: typeof MultiImagePreviewRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/discover': {
@@ -299,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActiveBidsRoute: ActiveBidsRoute,
   ChatRoute: ChatRoute,
+  DemoRoute: DemoRoute,
   DiscoverRoute: DiscoverRoute,
   LoginRoute: LoginRoute,
   MultiImagePreviewRoute: MultiImagePreviewRoute,
