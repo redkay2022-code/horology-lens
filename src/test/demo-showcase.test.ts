@@ -80,10 +80,13 @@ describe('V4 Phase A owner-declared videos', () => {
     for (const p of all.filter(p => p.sourceFile)) { expect(p.videoAsset).toMatch(new RegExp(`${p.sourceFile}\\.mp4$`)); expect(p.thumbnailAsset).toMatch(new RegExp(`${p.sourceFile}_poster\\.jpg$`)); }
   });
   it('labels rights owner-declared and never invents prices or verified specs', () => {
-    for (const p of all.filter(p => p.sourceFile)) { expect(p.rightsStatus).toBe(Number(p.demoPostId.slice(5)) >= 70 ? 'NOT_RECONFIRMED_FOR_PHASE_B' : 'OWNER_DECLARED'); expect(p.price).toBeNull(); expect(p.specVerification).toBe('unverified'); expect(p.reference).toBeNull(); }
+    for (const p of all.filter(p => p.sourceFile)) { expect(p.rightsStatus).toBe('OWNER_DECLARED'); expect(p.price).toBeNull(); expect(p.specVerification).toBe('unverified'); expect(p.reference).toBeNull(); }
     expect(demoShowcasePosts.find(p => p.demoPostId === 'demo-12')!.model).toBe('Royal Oak Perpetual Calendar');
     expect(demoShowcaseAll.filter(w => w.video)).toHaveLength(33);
     expect(demoShowcaseAll.some(w => w.video.includes('144844'))).toBe(false);
+    const phaseB = demoShowcaseAll.filter(w => Number(w.id.slice(5)) >= 70);
+    expect(phaseB).toHaveLength(20);
+    expect(phaseB.every(w => w.caption.includes('Owner-declared media') && !w.caption.includes('not reconfirmed') && !/verified rights|rights verified/i.test(w.caption))).toBe(true);
   });
 });
 

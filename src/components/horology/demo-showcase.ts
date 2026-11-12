@@ -207,7 +207,7 @@ const v4Entries: V4Entry[] = [
 export const demoShowcaseV4Posts: DemoShowcasePost[] = v4Entries.map(([id, src, collector, brand, model, ident, contentType, title, caption, ref]) => {
   const m = v4Media(src);
   return { demoPostId: id, brand, model, reference: null, title, caption, contentType, demoCollectorId: collector, mediaStatus: 'ready', videoAsset: m.video, thumbnailAsset: m.thumb,
-    specVerification: 'unverified', price: null, isDemo: true, sourceFile: src, rightsStatus: Number(id.slice(5)) >= 70 ? 'NOT_RECONFIRMED_FOR_PHASE_B' : 'OWNER_DECLARED', identification: ident, ...(ref ? { userReference: ref } : {}) } satisfies DemoShowcasePost;
+    specVerification: 'unverified', price: null, isDemo: true, sourceFile: src, rightsStatus: 'OWNER_DECLARED', identification: ident, ...(ref ? { userReference: ref } : {}) } satisfies DemoShowcasePost;
 });
 
 const U = 'Unverified';
