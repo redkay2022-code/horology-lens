@@ -1,5 +1,6 @@
 import { watches, type Watch } from './data';
 import { extraFeedPosts } from './feed-posts';
+import { demoShowcaseFeed } from './demo-showcase';
 
 // Generated films are illustrative, not evidence of a specific reference or ownership.
 export const auctionPosts: Watch[] = [
@@ -7,6 +8,7 @@ export const auctionPosts: Watch[] = [
   { ...watches[2], ref: '5711/1A-010', creator: 'GenevaCollector', initials: 'GC', is_live_verified: true, caption: 'The steel Nautilus. A collector’s chapter.\nLive Time Complete · simulated ownership.', dial: 'Blue', market: 98500, details: { ...watches[2].details, overview: 'Introduced in 1976, the Nautilus brought Gérald Genta’s porthole-inspired design to Patek Philippe. Reference 5711/1A-010 is known for its horizontally embossed blue dial and slender integrated steel bracelet.', caliber: 'Caliber 324 S C or 26-330 S C, depending on production year', dialFinish: 'Blue horizontally embossed dial with luminescent applied markers' }, auction: { highest: 98500, count: 12, increment: 500, seconds: 2855 } },
   { ...watches[1], model: 'Royal Oak Jumbo', ref: '16202ST', creator: 'WatchLover99', initials: 'WL', is_live_verified: false, caption: 'Petite Tapisserie. Extraordinary finishing.\nFrom my gallery · Display Only.', diameter: 39, thickness: 8.1, movement: 'Caliber 7121', reserve: 55, details: { ...watches[1].details, overview: 'The original Royal Oak transformed luxury watchmaking in 1972. The 16202ST Jumbo preserves its slender 39 mm proportions and Petite Tapisserie dial with the modern self-winding Caliber 7121.', caliber: 'In-house Caliber 7121 (Automatic)', powerReserve: 'Approximately 55 hours', jewels: 33, dialFinish: 'Blue Petite Tapisserie dial with luminescent markers' }, auction: undefined },
   ...extraFeedPosts,
+  ...demoShowcaseFeed,
 ];
 export type OfferStatus = 'Pending' | 'Outbid' | 'Accepted' | 'Declined' | 'Expired';
 export type Offer = { id: string; buyer: string; amount: number; status: 'pending' | 'accepted' | 'declined' };
