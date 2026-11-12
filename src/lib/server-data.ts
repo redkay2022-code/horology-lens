@@ -22,8 +22,8 @@ export type PostFilter = { authorId?: string | undefined; authorIds?: string[]; 
 export const safeTerm = (q: string) => q.replace(/[%_,()*\\.:"']/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
 
 export function validateVideoFile(f: { type: string; size: number }): string | null {
-  if (!(VIDEO_TYPES as readonly string[]).includes(f.type)) return 'MP4, WebM 또는 MOV 영상만 업로드할 수 있습니다.';
-  if (f.size <= 0 || f.size > MAX_VIDEO_BYTES) return '영상은 100MB 이하여야 합니다.';
+  if (!(VIDEO_TYPES as readonly string[]).includes(f.type)) return 'Only MP4, WebM or MOV videos can be uploaded.';
+  if (f.size <= 0 || f.size > MAX_VIDEO_BYTES) return 'Videos must be 100 MB or smaller.';
   return null;
 }
 
@@ -49,7 +49,7 @@ export async function validateVideoSignature(f: Blob): Promise<string | null> {
   const buf = typeof part.arrayBuffer === 'function' ? await part.arrayBuffer()
     : await new Promise<ArrayBuffer>((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result as ArrayBuffer); r.onerror = () => no(r.error); r.readAsArrayBuffer(part); });
   const head = new Uint8Array(buf);
-  return signatureMatchesType(sniffVideo(head), f.type) ? null : '영상 파일 형식을 확인할 수 없습니다. 손상되었거나 확장자만 바뀐 파일일 수 있습니다.';
+  return signatureMatchesType(sniffVideo(head), f.type) ? null : 'Could not verify the video file format. The file may be damaged or only renamed.';
 }
 
 /* Playback authorization is separate from post metadata: a signed URL is requested only for a video about to play. */
@@ -212,7 +212,7 @@ async function removeMedia(path: string): Promise<boolean> {
   return !error && (data?.length ?? 0) > 0;
 }
 const assertOwnPath = (path: string, userId: string) => {
-  if (!userId || !path.startsWith(`${userId}/`)) throw new Error('본인 게시물만 삭제할 수 있습니다.');
+  if (!userId || !path.startsWith(`${userId}/`)) throw new Error('You can only delete your own posts.');
 };
 export type DeleteResult = { cleanup: 'ok' | 'failed' };
 /**
@@ -220,11 +220,11 @@ export type DeleteResult = { cleanup: 'ok' | 'failed' };
  * and a cleanup failure then leaves only an owner-readable file instead of a post pointing at missing media.
  */
 export async function deletePost(p: Pick<ServerPost, 'id' | 'author_id' | 'video_path'>, userId: string): Promise<DeleteResult> {
-  if (p.author_id !== userId) throw new Error('본인 게시물만 삭제할 수 있습니다.');
+  if (p.author_id !== userId) throw new Error('You can only delete your own posts.');
   assertOwnPath(p.video_path, userId);
   const { error, count } = await supabase.from('posts').delete({ count: 'exact' }).eq('id', p.id);
   if (error) throw error;
-  if (!count) throw new Error('게시물을 삭제하지 못했습니다.');
+  if (!count) throw new Error('Could not delete the post.');
   const ok = (await removeMedia(p.video_path)) || (await removeMedia(p.video_path));
   return { cleanup: ok ? 'ok' : 'failed' };
 }

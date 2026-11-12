@@ -46,3 +46,4 @@
 - [x] S1: /demo upload entry blocked (notice, no real sheet mounted); Silent Bid restored with session-only demo auctions — awaiting CTO review
 - [x] S1 approved by CTO
 - [x] S2: demo-only menu/bottom nav, demo search, demo share link, demo same-watch, back navigation, clean-view nav hiding — awaiting CTO review (no deploy)
+- [x] UI: English default language + compact 42px Clean button — awaiting CTO review (no deploy)

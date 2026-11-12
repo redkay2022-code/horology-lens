@@ -16,7 +16,7 @@ export type AuctionState = { highest: number; count: number; mine: number | null
 // DEMO accounts only — a local role toggle, not authentication or authorization.
 export const demoAccounts = { buyer: 'alex.morgan', seller: 'SubmarinerKing' } as const;
 export type DemoRole = keyof typeof demoAccounts;
-export const ownPostMessage = '내 게시물에는 오퍼를 보낼 수 없습니다. (DEMO)';
+export const ownPostMessage = 'You cannot send an offer on your own post. (DEMO)';
 export function offerStatus(offer: Offer, state: AuctionState, now: number): OfferStatus {
   if (offer.status === 'accepted') return 'Accepted';
   if (offer.status === 'declined') return 'Declined';
@@ -26,8 +26,8 @@ export function offerStatus(offer: Offer, state: AuctionState, now: number): Off
 export function myOffer(state: AuctionState | undefined, user: string) {
   return state?.offers.filter(o => o.buyer === user).at(-1);
 }
-export const displayOnlyMessage = '소유자 라이브 인증을 완료한 게시물만 오퍼를 받을 수 있습니다.';
-export const auctionDisclaimer = 'WRISTORY는 대화 연결 매개체일 뿐 결제 및 중개를 담당하지 않으며, 거래 책임을 지지 않습니다.';
+export const displayOnlyMessage = 'Only posts with a completed owner live verification can receive offers.';
+export const auctionDisclaimer = 'WRISTORY only connects conversations. It does not handle payments or brokerage and is not responsible for transactions.';
 export function canOffer(watch: Watch, state: AuctionState | undefined, now: number, user?: string) {
   return watch.creator !== user && watch.is_live_verified === true && !!state && state.endsAt > now && state.accepted === null;
 }

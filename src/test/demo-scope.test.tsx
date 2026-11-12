@@ -64,8 +64,8 @@ describe('Shell + button', () => {
     route.path = '/demo';
     renderShell();
     fireEvent.click(screen.getByRole('button', { name: 'Create a wrist story' }));
-    expect(toastInfo).toHaveBeenCalledWith('시연 모드에서는 업로드할 수 없습니다');
-    expect(screen.queryByText('새로운 시계 이야기')).toBeNull();
+    expect(toastInfo).toHaveBeenCalledWith('Uploads are not available in demo mode');
+    expect(screen.queryByText('Create a wrist story')).toBeNull();
   });
 
   it('blocks it on demo collector profiles too', () => {
@@ -73,7 +73,7 @@ describe('Shell + button', () => {
     renderShell();
     fireEvent.click(screen.getByRole('button', { name: 'Create a wrist story' }));
     expect(toastInfo).toHaveBeenCalledWith(demoUploadBlocked);
-    expect(screen.queryByText('새로운 시계 이야기')).toBeNull();
+    expect(screen.queryByText('Create a wrist story')).toBeNull();
   });
 
   it('keeps the real creation chooser on the real home', () => {
@@ -81,6 +81,6 @@ describe('Shell + button', () => {
     renderShell();
     fireEvent.click(screen.getByRole('button', { name: 'Create a wrist story' }));
     expect(toastInfo).not.toHaveBeenCalled();
-    expect(screen.getByText('새로운 시계 이야기')).toBeTruthy();
+    expect(screen.getByText('Create a wrist story')).toBeTruthy();
   });
 });

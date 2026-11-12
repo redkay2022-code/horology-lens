@@ -22,18 +22,18 @@ describe('premium creation with isolated service mocks, no production writes', (
     fireEvent.change(screen.getByLabelText('Purchase price'), { target: { value: '123.45' } });
     fireEvent.change(screen.getByLabelText('Currency'), { target: { value: 'krw' } });
     fireEvent.change(screen.getByLabelText('Purchase date'), { target: { value: '2026-11-10' } });
-    fireEvent.submit(screen.getByRole('button', { name: '컬렉션에 저장' }).closest('form') as HTMLFormElement);
+    fireEvent.submit(screen.getByRole('button', { name: 'Save to Collection' }).closest('form') as HTMLFormElement);
     await waitFor(() => expect(mocks.add).toHaveBeenCalledWith({ data: { catalogId: null, unconfirmedFields: { brand: 'Rolex', model: '', reference: null }, purchasePrice: 123.45, purchaseCurrency: 'KRW', purchasedOn: '2026-11-10' } }));
   });
   it('keeps required brand validation without calling add', async () => {
     renderWithQueries(<CollectionForm catalog={[]} onDone={vi.fn()}/>);
-    fireEvent.submit(screen.getByRole('button', { name: '컬렉션에 저장' }).closest('form') as HTMLFormElement);
+    fireEvent.submit(screen.getByRole('button', { name: 'Save to Collection' }).closest('form') as HTMLFormElement);
     expect(mocks.add).not.toHaveBeenCalled();
   });
   it('edits the original record rather than creating a new one', async () => {
     renderWithQueries(<CollectionForm catalog={[]} initial={{ id: 'watch-a', catalog_id: null, unconfirmed_fields: { brand: 'Omega', model: 'Speedmaster' }, purchase_price: 200, purchase_currency: 'USD', purchased_on: null, visibility: 'private' }} onDone={vi.fn()}/>);
     fireEvent.change(screen.getByLabelText('Model'), { target: { value: 'Seamaster' } });
-    fireEvent.submit(screen.getByRole('button', { name: '변경 사항 저장' }).closest('form') as HTMLFormElement);
+    fireEvent.submit(screen.getByRole('button', { name: 'Save changes' }).closest('form') as HTMLFormElement);
     await waitFor(() => expect(mocks.update).toHaveBeenCalledWith({ data: { id: 'watch-a', patch: { catalogId: null, unconfirmedFields: { brand: 'Omega', model: 'Seamaster', reference: null }, purchasePrice: 200, purchaseCurrency: 'USD', purchasedOn: null } } }));
     expect(mocks.add).not.toHaveBeenCalled();
   });
@@ -54,8 +54,8 @@ describe('premium creation with isolated service mocks, no production writes', (
     fireEvent.change(screen.getByLabelText('Existing collection watch'), { target: { value: 'watch-private' } });
     const file = new File(['video'], 'test.mp4', { type: 'video/mp4' });
     fireEvent.change(screen.getByLabelText('Video file'), { target: { files: [file] } });
-    await waitFor(() => expect(screen.getByRole('button', { name: /^영상 게시$/ })).not.toBeDisabled());
-    fireEvent.submit(screen.getByRole('button', { name: /^영상 게시$/ }).closest('form') as HTMLFormElement);
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Publish$/ })).not.toBeDisabled());
+    fireEvent.submit(screen.getByRole('button', { name: /^Publish$/ }).closest('form') as HTMLFormElement);
     await waitFor(() => expect(mocks.upload).toHaveBeenCalledWith(account, file, { caption: '', brand: 'Rolex', model: 'Submariner', reference: '126610LV', case_size_mm: null, catalog_id: null }));
   });
   it('anonymous creation never reads a private collection or publishes', async () => {
@@ -68,7 +68,7 @@ describe('premium creation with isolated service mocks, no production writes', (
     renderWithQueries(<ServerUploadSheet/>);
     fireEvent.change(screen.getByLabelText('Watch photo'), { target: { files: [new File(['photo'], 'watch.jpg', { type: 'image/jpeg' })] } });
     await waitFor(() => expect(mocks.identify).toHaveBeenCalledWith({ data: { image: expect.stringContaining('data:image/jpeg;base64,') } }));
-    fireEvent.click(await screen.findByRole('button', { name: '미확인 정보로 사용' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Use as unconfirmed' }));
     expect(screen.getByLabelText('Brand')).toHaveValue('Omega');
     expect(screen.getByLabelText('Confirmed model', { exact: true })).toHaveValue('');
   });

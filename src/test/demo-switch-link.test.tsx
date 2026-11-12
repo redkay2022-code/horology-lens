@@ -15,11 +15,11 @@ describe('dev-preview demo switch', () => {
   afterEach(() => vi.unstubAllEnvs());
   it('links the real home to /demo in development builds', async () => {
     await renderSwitch('/demo');
-    expect(screen.getByRole('link', { name: /시연 보기/ }).getAttribute('href')).toBe('/demo');
+    expect(screen.getByRole('link', { name: /Demo view/ }).getAttribute('href')).toBe('/demo');
   });
   it('links /demo back to the real home', async () => {
     await renderSwitch('/');
-    expect(screen.getByRole('link', { name: /기본 홈/ }).getAttribute('href')).toBe('/');
+    expect(screen.getByRole('link', { name: /main home/i }).getAttribute('href')).toBe('/');
   });
   it('renders nothing in production builds', async () => {
     vi.stubEnv('DEV', false);

@@ -49,7 +49,7 @@ describe('upload signature validation', () => {
     expect(signatureMatchesType('webm', 'video/mp4')).toBe(false);
   });
   it('rejects a text file renamed to .mp4 and accepts a real MP4 header', async () => {
-    expect(await validateVideoSignature(new Blob(['not a video at all'], { type: 'video/mp4' }))).toMatch(/형식/);
+    expect(await validateVideoSignature(new Blob(['not a video at all'], { type: 'video/mp4' }))).toMatch(/format/);
     expect(await validateVideoSignature(new Blob([bytes(0, 0, 0, 0x20, 'ftypisom', 0, 0, 0, 0)], { type: 'video/mp4' }))).toBeNull();
   });
 });

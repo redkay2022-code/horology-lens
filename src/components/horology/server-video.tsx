@@ -59,7 +59,7 @@ export function PostVideo({ path, mode }: { path: string; mode: PlaybackMode }) 
     onError={() => {
       if (!retried.current) { retried.current = true; void qc.invalidateQueries({ queryKey: playbackKey(path) }); return; }
       setFailed(true);
-      if (mode === 'active') toast.error('영상을 재생할 수 없습니다. 형식(MOV 등)이 이 브라우저에서 지원되지 않거나 링크가 만료되었습니다.');
+      if (mode === 'active') toast.error('This video cannot be played. Its format (such as MOV) may not be supported in this browser, or the link has expired.');
     }}
     onLoadedData={() => { retried.current = false; markPlayback('frame', path); setShown(true); if (mode === 'active') { firstFrameSeen = true; window.dispatchEvent(new Event(READY_EVENT)); } }}
     onProgress={() => markPlayback('bytes', path)}

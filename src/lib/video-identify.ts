@@ -26,8 +26,8 @@ export function resolveIdentification(r: IdResult, catalog: CatalogRecord[]): Re
     const compatible = catalog.filter(x => !!x.reference && !!x.caseSizeMm && brandKey(x.brand) === brandKey(c.brand) && x.model.trim().toLowerCase() === c.model.trim().toLowerCase() && sameReference(c.brand, c.reference ?? '', x.reference));
     const rec = compatible.length === 1 ? compatible[0] ?? null : null;
     const legacyMatch = r.matches.find(x => x.candidateIndex === i);
-    const conflicts = legacyMatch && !rec ? ['카탈로그의 브랜드·모델·전체 레퍼런스가 일치하지 않습니다.'] : [];
-    return { brand: c.brand, model: c.model, reference: c.reference ?? '', rawReference: c.reference ?? '', confidence: c.confidence, catalog: rec, targetId: 'unassigned', visibleFeatures: [], conflicts, unknown: ['현재 단일 이미지 응답에는 관찰 특징이 포함되지 않습니다.', '레퍼런스 판독 여부 및 영상 속 시계 수는 확인되지 않았습니다.'] };
+    const conflicts = legacyMatch && !rec ? ['The catalog brand, model and full reference do not match.'] : [];
+    return { brand: c.brand, model: c.model, reference: c.reference ?? '', rawReference: c.reference ?? '', confidence: c.confidence, catalog: rec, targetId: 'unassigned', visibleFeatures: [], conflicts, unknown: ['The current single-image response does not include observed features.', 'Whether the reference was read and how many watches appear in the video were not confirmed.'] };
   }).filter(o => o.brand.trim() || o.model.trim());
   if (!options.length) return { kind: 'none' };
   const top = options[0];

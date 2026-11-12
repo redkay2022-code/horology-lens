@@ -46,7 +46,7 @@ export function DemoSwitchLink({ to }: { to: '/demo' | '/' }) {
   if (!import.meta.env.DEV) return null;
   return <Button asChild variant="outline" size="sm" className="demo-switch">
     {to === '/demo'
-      ? <Link to="/demo" aria-label="시연 보기 (개발 미리보기 전용)"><Clapperboard size={14} />시연 보기</Link>
-      : <Link to="/" aria-label="기본 홈으로 돌아가기"><ArrowLeft size={14} />기본 홈</Link>}
+      ? <Link to="/demo" aria-label="Demo view (development preview only)"><Clapperboard size={14} />Demo view</Link>
+      : <Link to="/" aria-label="Back to main home"><ArrowLeft size={14} />Main home</Link>}
   </Button>;
 }

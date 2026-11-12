@@ -23,9 +23,9 @@ function AuthForm(){
  const {setRole}=useCommunity();const navigate=useNavigate();
  const [mode,setMode]=useState<'login'|'signup'>('login');const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [name,setName]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [sent,setSent]=useState(false);
  const submit=async()=>{
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return setError('올바른 이메일을 입력해주세요.');
-  if(password.length<8)return setError('비밀번호는 8자 이상이어야 합니다.');
-  if(mode==='signup'&&name.trim().length<2)return setError('이름을 2자 이상 입력해주세요.');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return setError('Please enter a valid email address.');
+  if(password.length<8)return setError('Password must be at least 8 characters.');
+  if(mode==='signup'&&name.trim().length<2)return setError('Please enter a name with at least 2 characters.');
   setError('');setBusy(true);
   const res=mode==='signup'
    ?await supabase.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+'/login',data:{display_name:name.trim()}}})
@@ -33,10 +33,10 @@ function AuthForm(){
   setBusy(false);
   if(res.error)return setError(res.error.message);
   if(mode==='signup'&&!res.data.session){setSent(true);return;}
-  toast.success('로그인되었습니다');
+  toast.success('Signed in');
  };
- const enter=(r:'buyer'|'seller')=>{setRole(r);toast.success(`DEMO ${r==='buyer'?'Buyer':'Seller'} 계정으로 입장했습니다`,{description:'실제 로그인이 아닌 데모 모드입니다.'});void navigate({to:'/profile'})};
- if(sent)return <p className="offer-receipt" role="status">확인 메일을 보냈습니다. 메일의 링크를 누른 뒤 로그인해주세요.</p>;
+ const enter=(r:'buyer'|'seller')=>{setRole(r);toast.success(`Entered as the DEMO ${r==='buyer'?'Buyer':'Seller'} account`,{description:'This is demo mode, not a real sign-in.'});void navigate({to:'/profile'})};
+ if(sent)return <p className="offer-receipt" role="status">We sent a confirmation email. Open the link in it, then sign in.</p>;
  return <>
   <div className="studio-tabs" role="tablist" aria-label="Login or sign up">{(['login','signup'] as const).map(m=><Button key={m} variant="ghost" role="tab" aria-selected={mode===m} onClick={()=>{setMode(m);setError('')}}>{m==='login'?'Login':'Sign Up'}</Button>)}</div>
   <form className="profile-edit" noValidate onSubmit={e=>{e.preventDefault();void submit()}}>
@@ -56,15 +56,15 @@ function Account({userId,email}:{userId:string;email:string}){
  const [form,setForm]=useState({handle:'',display_name:'',bio:''});const [busy,setBusy]=useState(false);const [err,setErr]=useState('');
  useEffect(()=>{if(profile)setForm({handle:profile.handle,display_name:profile.display_name,bio:profile.bio})},[profile]);
  const save=async()=>{
-  if(!/^[a-z0-9._]{3,30}$/.test(form.handle))return setErr('핸들은 영문 소문자·숫자·._ 3~30자입니다.');
+  if(!/^[a-z0-9._]{3,30}$/.test(form.handle))return setErr('Handles are 3–30 lowercase letters, numbers, . or _.');
   setErr('');setBusy(true);
   const {error:e}=await supabase.from('profiles').update({handle:form.handle,display_name:form.display_name.trim(),bio:form.bio.trim()}).eq('id',userId);
   setBusy(false);
-  if(e)return setErr(e.code==='23505'?'이미 사용 중인 핸들입니다.':e.message);
-  await qc.invalidateQueries({queryKey:['profile',userId]});toast.success('프로필이 저장되었습니다');
+  if(e)return setErr(e.code==='23505'?'That handle is already taken.':e.message);
+  await qc.invalidateQueries({queryKey:['profile',userId]});toast.success('Profile saved');
  };
  if(isLoading)return <p className="offer-receipt">Loading…</p>;
- if(error||!profile)return <p role="alert" className="error-text">프로필을 불러오지 못했습니다.</p>;
+ if(error||!profile)return <p role="alert" className="error-text">Could not load your profile.</p>;
  return <>
   <p className="offer-receipt">{email} · @{profile.handle}</p>
   <form className="profile-edit" onSubmit={e=>{e.preventDefault();void save()}}>
@@ -74,6 +74,6 @@ function Account({userId,email}:{userId:string;email:string}){
    {err&&<p role="alert" className="error-text">{err}</p>}
    <Button type="submit" disabled={busy}>Save profile</Button>
   </form>
-  <Button variant="outline" onClick={()=>void signOut().then(()=>toast.success('로그아웃되었습니다'))}>Log out</Button>
+  <Button variant="outline" onClick={()=>void signOut().then(()=>toast.success('Signed out'))}>Log out</Button>
  </>;
 }

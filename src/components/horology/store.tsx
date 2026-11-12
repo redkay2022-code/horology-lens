@@ -19,7 +19,7 @@ type CommunityState = {
   /** True while the dev-only /demo preview routes are open (set by the shell from the URL). */
   demoScope: boolean; setDemoScope: (value: boolean)=>void;
 };
-export const demoUploadBlocked='시연 모드에서는 업로드할 수 없습니다';
+export const demoUploadBlocked='Uploads are not available in demo mode';
 export const comingSoon='Silent Bid · 1:1 Chat — Coming Soon (not yet available in production)';
 const Community = createContext<CommunityState | null>(null);
 export function HorologyProvider({children}:{children:ReactNode}) {

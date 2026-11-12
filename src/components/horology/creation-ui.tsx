@@ -7,6 +7,8 @@ import type { CreationWatch } from '@/lib/creation-watch';
 
 export type CreationLanguage = 'KO' | 'EN';
 export const creationText = (lang: CreationLanguage, ko: string, en: string) => lang === 'KO' ? ko : en;
+/** Default display language for every language toggle (feed, menu, creation sheets). Korean strings stay as the KO resources. */
+export const DEFAULT_LANGUAGE: CreationLanguage = 'EN';
 
 export function CreationSheet({ open, onClose, title, lang, onLanguage, busy = false, children }: { open: boolean; onClose: () => void; title: string; lang: CreationLanguage; onLanguage: () => void; busy?: boolean; children: ReactNode }) {
   const node = useRef<HTMLDivElement>(null);
@@ -34,6 +36,6 @@ export function WatchIdentification({ catalog, value, onChange, lang, collection
 }
 
 export function CreationChooser({ open, onClose, onVideo, onCollection }: { open: boolean; onClose: () => void; onVideo: () => void; onCollection: () => void }) {
-  const [lang, setLang] = useState<CreationLanguage>('KO');
+  const [lang, setLang] = useState<CreationLanguage>(DEFAULT_LANGUAGE);
   return <CreationSheet open={open} onClose={onClose} title={creationText(lang, '새로운 시계 이야기', 'Create a wrist story')} lang={lang} onLanguage={() => setLang(lang === 'KO' ? 'EN' : 'KO')}><div className="creation-choices">{[{ Icon: Film, ko: '시계 영상 게시', en: 'Post a Watch Video', subKo: '손목 위의 순간을 공유하세요', subEn: 'Share a moment on your wrist', action: onVideo }, { Icon: Watch, ko: '내 컬렉션에 시계 추가', en: 'Add a Watch to My Collection', subKo: '나만의 시계 기록', subEn: 'Your personal watch record', action: onCollection }].map(item => <Button key={item.en} variant="ghost" className="creation-choice" onClick={item.action}><item.Icon/><span><strong>{creationText(lang,item.ko,item.en)}</strong><small>{creationText(lang,item.subKo,item.subEn)}</small></span><ChevronRight/></Button>)}</div></CreationSheet>;
 }

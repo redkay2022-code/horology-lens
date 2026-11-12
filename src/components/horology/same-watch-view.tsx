@@ -29,9 +29,9 @@ export function SameWatchView({ brand, model, ref, size, back, posts: source }: 
   return <WatchFeed list={[...exact, ...related]} header={header} renderGrid={(_items: Watch[], onOpen: (id: string) => void) => <>
     {followNote}
     <h2 className="same-watch-section">Exact Match <small>{exact.length}</small></h2>
-    {exact.length ? <div className="same-watch-grid" aria-label="Exact match grid">{exact.map(w => <Tile key={w.id} w={w} onOpen={onOpen} />)}</div> : <p className="same-watch-note">{ref ? '확인된 동일 레퍼런스·사이즈 게시물이 없습니다.' : '레퍼런스가 확인되지 않아 정확히 일치하는 시계로 표시할 수 없습니다.'}</p>}
+    {exact.length ? <div className="same-watch-grid" aria-label="Exact match grid">{exact.map(w => <Tile key={w.id} w={w} onOpen={onOpen} />)}</div> : <p className="same-watch-note">{ref ? 'No posts with a confirmed identical reference and size.' : 'The reference is unconfirmed, so no post can be shown as an exact match.'}</p>}
     {related.length > 0 && <><h2 className="same-watch-section">Related Watches <small>{related.length}</small></h2>
-      <p className="same-watch-note">같은 브랜드·모델이지만 레퍼런스가 다르거나 확인되지 않았거나(Unconfirmed) 케이스 사이즈가 다른 게시물입니다.</p>
+      <p className="same-watch-note">Same brand and model, but the reference differs or is unconfirmed, or the case size differs.</p>
       <div className="same-watch-grid" aria-label="Related watches grid">{related.map(w => <Tile key={w.id} w={w} onOpen={onOpen} />)}</div></>}
   </>} />;
 }
