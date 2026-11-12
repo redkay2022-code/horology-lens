@@ -23,7 +23,10 @@ import { Route as SameWatchRouteImport } from './routes/same-watch'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WatchboxRouteImport } from './routes/watchbox'
 import { Route as CreatorHandleRouteImport } from './routes/creator.$handle'
+import { Route as DemoSameWatchRouteImport } from './routes/demo_.same-watch'
+import { Route as DemoSearchRouteImport } from './routes/demo_.search'
 import { Route as DemoCollectorHandleRouteImport } from './routes/demo_.collector.$handle'
+import { Route as DemoSoonSectionRouteImport } from './routes/demo_.soon.$section'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -95,9 +98,24 @@ const CreatorHandleRoute = CreatorHandleRouteImport.update({
   path: '/creator/$handle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoSameWatchRoute = DemoSameWatchRouteImport.update({
+  id: '/demo_/same-watch',
+  path: '/demo/same-watch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoSearchRoute = DemoSearchRouteImport.update({
+  id: '/demo_/search',
+  path: '/demo/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoCollectorHandleRoute = DemoCollectorHandleRouteImport.update({
   id: '/demo_/collector/$handle',
   path: '/demo/collector/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoSoonSectionRoute = DemoSoonSectionRouteImport.update({
+  id: '/demo_/soon/$section',
+  path: '/demo/soon/$section',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -116,7 +134,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
   '/creator/$handle': typeof CreatorHandleRoute
+  '/demo/same-watch': typeof DemoSameWatchRoute
+  '/demo/search': typeof DemoSearchRoute
   '/demo/collector/$handle': typeof DemoCollectorHandleRoute
+  '/demo/soon/$section': typeof DemoSoonSectionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -133,7 +154,10 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
   '/creator/$handle': typeof CreatorHandleRoute
+  '/demo/same-watch': typeof DemoSameWatchRoute
+  '/demo/search': typeof DemoSearchRoute
   '/demo/collector/$handle': typeof DemoCollectorHandleRoute
+  '/demo/soon/$section': typeof DemoSoonSectionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -151,7 +175,10 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/watchbox': typeof WatchboxRoute
   '/creator/$handle': typeof CreatorHandleRoute
+  '/demo_/same-watch': typeof DemoSameWatchRoute
+  '/demo_/search': typeof DemoSearchRoute
   '/demo_/collector/$handle': typeof DemoCollectorHandleRoute
+  '/demo_/soon/$section': typeof DemoSoonSectionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,7 +197,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/watchbox'
     | '/creator/$handle'
+    | '/demo/same-watch'
+    | '/demo/search'
     | '/demo/collector/$handle'
+    | '/demo/soon/$section'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,7 +217,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/watchbox'
     | '/creator/$handle'
+    | '/demo/same-watch'
+    | '/demo/search'
     | '/demo/collector/$handle'
+    | '/demo/soon/$section'
   id:
     | '__root__'
     | '/'
@@ -204,7 +237,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/watchbox'
     | '/creator/$handle'
+    | '/demo_/same-watch'
+    | '/demo_/search'
     | '/demo_/collector/$handle'
+    | '/demo_/soon/$section'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,7 +258,10 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   WatchboxRoute: typeof WatchboxRoute
   CreatorHandleRoute: typeof CreatorHandleRoute
+  DemoSameWatchRoute: typeof DemoSameWatchRoute
+  DemoSearchRoute: typeof DemoSearchRoute
   DemoCollectorHandleRoute: typeof DemoCollectorHandleRoute
+  DemoSoonSectionRoute: typeof DemoSoonSectionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -325,11 +364,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreatorHandleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo_/same-watch': {
+      id: '/demo_/same-watch'
+      path: '/demo/same-watch'
+      fullPath: '/demo/same-watch'
+      preLoaderRoute: typeof DemoSameWatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo_/search': {
+      id: '/demo_/search'
+      path: '/demo/search'
+      fullPath: '/demo/search'
+      preLoaderRoute: typeof DemoSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo_/collector/$handle': {
       id: '/demo_/collector/$handle'
       path: '/demo/collector/$handle'
       fullPath: '/demo/collector/$handle'
       preLoaderRoute: typeof DemoCollectorHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo_/soon/$section': {
+      id: '/demo_/soon/$section'
+      path: '/demo/soon/$section'
+      fullPath: '/demo/soon/$section'
+      preLoaderRoute: typeof DemoSoonSectionRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -350,7 +410,10 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   WatchboxRoute: WatchboxRoute,
   CreatorHandleRoute: CreatorHandleRoute,
+  DemoSameWatchRoute: DemoSameWatchRoute,
+  DemoSearchRoute: DemoSearchRoute,
   DemoCollectorHandleRoute: DemoCollectorHandleRoute,
+  DemoSoonSectionRoute: DemoSoonSectionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

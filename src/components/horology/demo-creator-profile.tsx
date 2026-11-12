@@ -7,7 +7,7 @@ import { WatchFeed } from './feed';
 import type { Watch } from './data';
 import { useCommunity } from './store';
 import { demoCollectorByHandle, isDemoCollectorHandle } from './demo-showcase';
-import { useInDemoRoute } from './demo-route';
+import { DemoBackButton, useInDemoRoute } from './demo-route';
 
 const tabs = ['All Posts', 'Verified', 'Display Only'] as const;
 
@@ -24,7 +24,7 @@ export function DemoCreatorProfile({ handle }: { handle: string }) {
   // Same shared follow state as the feed: one followed post marks the creator as followed.
   const follow = () => { if (following) followIds.forEach(toggleFollow); else if (own[0]) toggleFollow(own[0].id); toast.success(following ? `@${handle} 팔로우 취소 · DEMO` : `@${handle} 팔로우 · DEMO`); };
   const header = <header className="creator-profile-head">
-    <div className="creator-profile-top"><Button variant="ghost" size="icon" asChild>{inDemoRoute ? <Link to="/demo" aria-label="Back to demo feed"><ArrowLeft size={19} /></Link> : <Link to="/" aria-label="Back"><ArrowLeft size={19} /></Link>}</Button><small>COLLECTOR</small></div>
+    <div className="creator-profile-top">{inDemoRoute ? <DemoBackButton label="Back to demo feed" /> : <Button variant="ghost" size="icon" asChild><Link to="/" aria-label="Back"><ArrowLeft size={19} /></Link></Button>}<small>COLLECTOR</small></div>
     <div className="creator-profile-id"><span className="creator-avatar creator-profile-avatar">{own[0]?.initials ?? handle.slice(0, 2).toUpperCase()}</span>
       <div><strong>{demo?.displayName ?? handle}</strong><span>@{handle}</span></div>
       {own.length > 0 && !demo && !inDemoRoute && <Button size="sm" variant={following ? 'outline' : 'default'} aria-pressed={following} onClick={follow}>{following ? <Check size={14} /> : <Plus size={14} />}{following ? 'Following' : 'Follow'}</Button>}

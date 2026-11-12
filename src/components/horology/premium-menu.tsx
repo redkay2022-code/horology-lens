@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { Bell, Bookmark, ChevronRight, Compass, Gem, MessageSquare, Settings, UserRound, Users, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { isDemoMode } from '@/lib/backend-mode';
+import { useInDemoRoute, type DemoSoonSection } from './demo-route';
 
 type Lang = 'KO' | 'EN';
 type Item = { key: string; en: string; ko: string; icon: typeof Bell; to?: '/profile' | '/discover' | '/notifications' | '/chat' | '/settings'; search?: { tab: 'collection' | 'saved' }; following?: true; soon?: boolean };
@@ -25,15 +26,26 @@ export const MENU_SECTIONS: { en: string; ko: string; items: Item[] }[] = [
   ] },
 ];
 
+/** /demo preview destinations: every entry stays inside the demo (search, or an in-demo notice); none reaches a real page. */
+export const DEMO_MENU_TARGETS: Record<string, { search: true } | { section: DemoSoonSection }> = {
+  profile: { section: 'profile' }, collection: { section: 'profile' }, saved: { section: 'profile' },
+  discover: { search: true }, notifications: { section: 'notifications' }, messages: { section: 'messages' }, settings: { section: 'settings' },
+};
+
 export function PremiumMenu({ open, onClose, lang, onFollowing }: { open: boolean; onClose: () => void; lang: Lang; onFollowing: () => void }) {
   const ko = lang === 'KO';
-  const body = (it: Item) => <><span className="pm-icon"><it.icon size={17} strokeWidth={1.6}/></span><span className="pm-label">{ko ? it.ko : it.en}</span>{it.soon && <span className="pm-soon">{ko ? '준비 중' : 'Coming Soon'}</span>}<ChevronRight className="pm-chevron" size={15}/></>;
+  const inDemo = useInDemoRoute();
+  const body = (it: Item, soon = it.soon) => <><span className="pm-icon"><it.icon size={17} strokeWidth={1.6}/></span><span className="pm-label">{ko ? it.ko : it.en}</span>{soon && <span className="pm-soon">{ko ? '준비 중' : 'Coming Soon'}</span>}<ChevronRight className="pm-chevron" size={15}/></>;
+  const demoLink = (it: Item) => { const t = DEMO_MENU_TARGETS[it.key]; if (!t) return null; return 'search' in t
+    ? <Link to="/demo/search" className="pm-item" onClick={onClose}>{body(it, false)}</Link>
+    : <Link to="/demo/soon/$section" params={{ section: t.section }} className="pm-item" onClick={onClose}>{body(it, t.section !== 'profile')}</Link>; };
   return <Dialog.Root open={open} onOpenChange={v => { if (!v) onClose(); }}><Dialog.Portal><Dialog.Overlay className="sheet-backdrop"/>
     <Dialog.Content className="bottom-sheet premium-menu" aria-describedby={undefined}>
       <div className="sheet-handle"/>
       <header className="pm-header"><div><Dialog.Title className="pm-wordmark">WRISTORY</Dialog.Title><p className="pm-subtitle">THE ART OF WATCH COLLECTING</p></div><Dialog.Close asChild><Button variant="ghost" size="icon" className="pm-close" aria-label={ko ? '메뉴 닫기' : 'Close menu'}><X/></Button></Dialog.Close></header>
       <nav className="pm-scroll" aria-label={ko ? '메뉴' : 'Menu'}>{MENU_SECTIONS.map(s => <section key={s.en} className="pm-section"><h3>{ko ? s.ko : s.en}</h3><ul>{s.items.map(it => <li key={it.key}>
         {it.following ? <button type="button" className="pm-item" onClick={() => { onFollowing(); onClose(); }}>{body(it)}</button>
+          : inDemo ? demoLink(it)
           : <Link to={it.to!} search={(it.search ?? {}) as never} className="pm-item" onClick={onClose}>{body(it)}</Link>}
       </li>)}</ul></section>)}</nav>
     </Dialog.Content></Dialog.Portal></Dialog.Root>;
