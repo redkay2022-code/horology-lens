@@ -32,11 +32,11 @@ import { demoShowcaseAll, demoCollectorByHandle } from '@/components/horology/de
 import { UNVERIFIED_LABELS } from '@/components/horology/sheets';
 describe('P1 presentation hardening', () => {
   it('keeps all 60 internally but feeds only media posts, videos first', () => {
-    expect(demoShowcaseAll).toHaveLength(69);
-    expect(demoShowcaseFeed).toHaveLength(19);
-    expect(demoShowcaseFeed.slice(0, 13).every(w => w.video)).toBe(true);
-    expect(demoShowcaseFeed.slice(13).every(w => !w.video && w.image)).toBe(true);
-    expect(auctionPosts.filter(w => w.id.startsWith('demo-'))).toHaveLength(19);
+    expect(demoShowcaseAll).toHaveLength(89);
+    expect(demoShowcaseFeed).toHaveLength(39);
+    expect(demoShowcaseFeed.slice(0, 33).every(w => w.video)).toBe(true);
+    expect(demoShowcaseFeed.slice(33).every(w => !w.video && w.image)).toBe(true);
+    expect(auctionPosts.filter(w => w.id.startsWith('demo-'))).toHaveLength(39);
   });
   it('marks every showcase post unverified with explicit labels', () => {
     expect(demoShowcaseAll.every(w => w.unverified === true && w.ref === '')).toBe(true);
@@ -71,28 +71,29 @@ import { demoShowcaseV4Posts } from '@/components/horology/demo-showcase';
 describe('V4 Phase A owner-declared videos', () => {
   const all = [...demoShowcasePosts, ...demoShowcaseV4Posts];
   it('adds demo-61..demo-69 without colliding with demo-01..demo-60', () => {
-    expect(demoShowcaseV4Posts.map(p => p.demoPostId)).toEqual(Array.from({ length: 9 }, (_, i) => `demo-${61 + i}`));
-    expect(new Set(all.map(p => p.demoPostId)).size).toBe(69);
+    expect(demoShowcaseV4Posts.map(p => p.demoPostId)).toEqual(Array.from({ length: 29 }, (_, i) => `demo-${61 + i}`));
+    expect(new Set(all.map(p => p.demoPostId)).size).toBe(89);
   });
   it('maps each of the 10 source files to exactly one post with its own mp4 and poster', () => {
     const map = Object.fromEntries(all.filter(p => p.sourceFile).map(p => [p.sourceFile, p.demoPostId]));
-    expect(map).toEqual({ '144821': 'demo-12', '144820': 'demo-61', '144815': 'demo-62', '144826': 'demo-63', '144816': 'demo-64', '144817': 'demo-65', '144818': 'demo-66', '144819': 'demo-67', '144829': 'demo-68', '144828': 'demo-69' });
-    for (const p of all.filter(p => p.sourceFile)) { expect(p.videoAsset).toMatch(new RegExp(`wristory_${p.sourceFile}\\.mp4$`)); expect(p.thumbnailAsset).toMatch(new RegExp(`wristory_${p.sourceFile}_poster\\.jpg$`)); }
+    expect(map).toEqual({ '144821': 'demo-12', '144820': 'demo-61', '144815': 'demo-62', '144826': 'demo-63', '144816': 'demo-64', '144817': 'demo-65', '144818': 'demo-66', '144819': 'demo-67', '144829': 'demo-68', '144828': 'demo-69', ...Object.fromEntries(['144845','144846','144847','144850','144851','144852','144853','144854','144855','144856','144857','144858','144859','144860','144861','144862','144863','144864','144911','144916'].map((f, i) => [f, `demo-${70 + i}`])) });
+    for (const p of all.filter(p => p.sourceFile)) { expect(p.videoAsset).toMatch(new RegExp(`${p.sourceFile}\\.mp4$`)); expect(p.thumbnailAsset).toMatch(new RegExp(`${p.sourceFile}_poster\\.jpg$`)); }
   });
   it('labels rights owner-declared and never invents prices or verified specs', () => {
-    for (const p of all.filter(p => p.sourceFile)) { expect(p.rightsStatus).toBe('OWNER_DECLARED'); expect(p.price).toBeNull(); expect(p.specVerification).toBe('unverified'); expect(p.reference).toBeNull(); }
+    for (const p of all.filter(p => p.sourceFile)) { expect(p.rightsStatus).toBe(Number(p.demoPostId.slice(5)) >= 70 ? 'NOT_RECONFIRMED_FOR_PHASE_B' : 'OWNER_DECLARED'); expect(p.price).toBeNull(); expect(p.specVerification).toBe('unverified'); expect(p.reference).toBeNull(); }
     expect(demoShowcasePosts.find(p => p.demoPostId === 'demo-12')!.model).toBe('Royal Oak Perpetual Calendar');
-    expect(demoShowcaseAll.filter(w => w.video)).toHaveLength(13);
+    expect(demoShowcaseAll.filter(w => w.video)).toHaveLength(33);
+    expect(demoShowcaseAll.some(w => w.video.includes('144844'))).toBe(false);
   });
 });
 
 import { forYouPosts as _fy } from '@/components/horology/demo-showcase';
 import { auctionPosts as _ap } from '@/components/horology/auction';
 describe('V4 For You duplicate policy', () => {
-  it('hides demo-01/07/13 from For You (32 -> 29) with no duplicate video', () => {
-    expect(_ap.length).toBe(32);
+  it('hides demo-01/07/13 from For You (52 -> 49) with no duplicate video', () => {
+    expect(_ap.length).toBe(52);
     const fy = _fy(_ap);
-    expect(fy.length).toBe(29);
+    expect(fy.length).toBe(49);
     const v = fy.map(w => w.video).filter(Boolean);
     expect(new Set(v).size).toBe(v.length);
   });

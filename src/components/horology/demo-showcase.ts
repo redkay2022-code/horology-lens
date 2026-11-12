@@ -29,7 +29,7 @@ export type DemoShowcasePost = {
   demoCollectorId: string; mediaStatus: MediaStatus; videoAsset: string | null; thumbnailAsset: string | null;
   specVerification: 'unverified'; price: null; isDemo: true;
   /** V4 only: source file, owner-declared rights (not independently verified) and identification basis. */
-  sourceFile?: string; rightsStatus?: 'OWNER_DECLARED'; identification?: 'user-supplied' | 'unverified'; userReference?: string;
+  sourceFile?: string; rightsStatus?: 'OWNER_DECLARED' | 'NOT_RECONFIRMED_FOR_PHASE_B'; identification?: 'user-supplied' | 'unverified'; userReference?: string;
 };
 
 const c = (id: string, handle: string, displayName: string, focus: string, bio: string, brands: string[]): DemoCollector => ({ demoCollectorId: id, handle, displayName, focus, bio, brands, isDemo: true });
@@ -182,11 +182,32 @@ const v4Entries: V4Entry[] = [
   ['demo-67', '144819', 'dc03', 'Custom', 'GMT-Master II-Style Gem-Set', 'unverified', 'Design Details', 'A gem-set take on the travel watch', 'A customised GMT-style piece, filmed for the setting rather than the specs. Details unverified.'],
   ['demo-68', '144829', 'dc08', 'Vacheron Constantin', 'Overseas Tourbillon-Style', 'unverified', 'Wrist Roll', 'A tourbillon behind the Overseas bezel', 'A short roll showing an Overseas-style case with a tourbillon aperture. Exact model unverified.'],
   ['demo-69', '144828', 'dc11', 'Vacheron Constantin', 'Calendar Chronograph-Style', 'unverified', 'Collector\'s Perspective', 'Calendar and chronograph, side by side', 'A classical calendar chronograph layout from Geneva. Collection and reference unverified.'],
+  // Phase B (demo-70..demo-89). Reference candidates come from the owner CSV and are unauthenticated; other models are visual descriptions only.
+  ['demo-70', '144845', 'dc04', 'Patek Philippe', 'Grand Complications Perpetual Calendar Chronograph', 'user-supplied', 'Dial Macro', 'A perpetual calendar, held up to the light', 'Calendar windows and chronograph registers in one hand-held study. Reference match pending review.', '5271P-001'],
+  ['demo-71', '144846', 'dc11', 'Patek Philippe', 'Complications Annual Calendar Flyback Chronograph', 'user-supplied', 'Wrist Roll', 'Baguettes around an annual calendar', 'A gem-set bezel framing a flyback chronograph. Reference match pending review.', '5961R-010'],
+  ['demo-72', '144847', 'dc06', 'Unidentified', 'Gem-Set Bracelet Watch', 'unverified', 'Design Details', 'Red stones from lug to clasp', 'A heavily set bracelet watch filmed for the stonework. Maker, stones and value unverified.'],
+  ['demo-73', '144850', 'dc01', 'Unidentified', 'Steel Sports Watch with Set Bezel', 'unverified', 'Wrist Shot', 'Steel bracelet, bright bezel', 'A short wrist shot of a steel sports watch. Maker and details unverified.'],
+  ['demo-74', '144851', 'dc12', 'Unidentified', 'Pavé Dial Rose-Tone Day-Date-Style', 'unverified', 'Dial Macro', 'A pavé dial in rose tones', 'A fully set dial on a three-link bracelet, close up. Maker and materials unverified.'],
+  ['demo-75', '144852', 'dc03', 'Unidentified', 'Steel Chronograph on Bracelet', 'unverified', 'Collector\'s Perspective', 'An everyday walk with a chronograph', 'Filmed on the move, the way a watch actually gets worn. Details unverified.'],
+  ['demo-76', '144853', 'dc09', 'Unidentified', 'White Tonneau Skeleton Watch', 'unverified', 'Movement Appreciation', 'A white tonneau with an open heart', 'A skeletonised tonneau case on a white strap. Maker and materials unverified.'],
+  ['demo-77', '144854', 'dc02', 'F.P. Journe', 'Salmon Dial Dress Watch', 'unverified', 'Heritage & Story', 'A salmon dial with independent character', 'Off-centre subdials and a warm dial on brown leather. Collection and reference unverified.'],
+  ['demo-78', '144855', 'dc10', 'Unidentified', 'Off-Centre Dial Dress Watch', 'unverified', 'Wrist Shot', 'Off-centre time on black leather', 'An asymmetric dial layout worn simply. Maker and details unverified.'],
+  ['demo-79', '144856', 'dc05', 'Unidentified', 'Tonneau Openworked Watch', 'unverified', 'Wrist Roll', 'Bridges seen through a tonneau', 'An openworked tonneau on rubber, turning in daylight. Maker and details unverified.'],
+  ['demo-80', '144857', 'dc04', 'Patek Philippe', 'Baguette-Set Perpetual Calendar', 'unverified', 'Dial Macro', 'Moon phase under a baguette bezel', 'A perpetual calendar dial framed by baguettes, filmed slowly. Reference and materials unverified.'],
+  ['demo-81', '144858', 'dc07', 'Unidentified', 'Skeleton Tonneau on White Rubber', 'unverified', 'Design Details', 'Architecture on a white strap', 'A sculpted skeleton case seen from the side. Maker and materials unverified.'],
+  ['demo-82', '144859', 'dc12', 'Rolex', 'Submariner-Style Gem-Set', 'unverified', 'Dial Macro', 'Sapphire blues, held in hand', 'A gem-set dive-style watch with a blue dial. Customisation, stones and authenticity unverified.'],
+  ['demo-83', '144860', 'dc11', 'Unidentified', 'Steel Tourbillon on Bracelet', 'unverified', 'Collector\'s Perspective', 'Out of the box, into the light', 'A blue-dial piece lifted from its presentation box. Maker, reference and complication unverified.'],
+  ['demo-84', '144861', 'dc09', 'Unidentified', 'White Integrated-Bracelet Watch', 'unverified', 'Wrist Shot', 'All white, all integrated', 'A white case and bracelet worn against marble. Maker and materials unverified.'],
+  ['demo-85', '144862', 'dc01', 'Unidentified', 'Black Integrated-Bracelet Watch', 'unverified', 'Wrist Roll', 'Blacked out in the street', 'A black integrated-bracelet watch, turned slowly outdoors. Maker and materials unverified.'],
+  ['demo-86', '144863', 'dc09', 'Unidentified', 'Green Tonneau Sports Watch', 'unverified', 'Design Details', 'A flash of green on the wrist', 'A bright green tonneau case and strap. Maker and materials unverified.'],
+  ['demo-87', '144864', 'dc08', 'Unidentified', 'Gem-Set Tonneau Dress Watch', 'unverified', 'Dial Macro', 'A set tonneau, black dial', 'Stones around a shaped case with a black dial. Maker and stones unverified.'],
+  ['demo-88', '144911', 'dc05', 'Richard Mille', 'RM 27-05 Flying Tourbillon Rafael Nadal', 'user-supplied', 'Movement Appreciation', 'A tourbillon built to be swung', 'Skeleton bridges and a flying tourbillon, held close. Reference match pending review.', 'RM 27-05'],
+  ['demo-89', '144916', 'dc06', 'Audemars Piguet', 'Royal Oak Selfwinding Chronograph', 'user-supplied', 'Dial Macro', 'A fully set Royal Oak chronograph', 'Pavé from case to bracelet on a chronograph Royal Oak. Suffix and stones unverified.', '26242OR (suffix unverified)'],
 ];
 export const demoShowcaseV4Posts: DemoShowcasePost[] = v4Entries.map(([id, src, collector, brand, model, ident, contentType, title, caption, ref]) => {
   const m = v4Media(src);
   return { demoPostId: id, brand, model, reference: null, title, caption, contentType, demoCollectorId: collector, mediaStatus: 'ready', videoAsset: m.video, thumbnailAsset: m.thumb,
-    specVerification: 'unverified', price: null, isDemo: true, sourceFile: src, rightsStatus: 'OWNER_DECLARED', identification: ident, ...(ref ? { userReference: ref } : {}) } satisfies DemoShowcasePost;
+    specVerification: 'unverified', price: null, isDemo: true, sourceFile: src, rightsStatus: Number(id.slice(5)) >= 70 ? 'NOT_RECONFIRMED_FOR_PHASE_B' : 'OWNER_DECLARED', identification: ident, ...(ref ? { userReference: ref } : {}) } satisfies DemoShowcasePost;
 });
 
 const U = 'Unverified';
@@ -199,7 +220,7 @@ export const demoShowcaseAll: Watch[] = [...demoShowcasePosts, ...demoShowcaseV4
   const who = demoCollectors.find(x => x.demoCollectorId === p.demoCollectorId)!;
   return { ...plainBase, id: p.demoPostId, brand: p.brand, model: p.model, ref: '', year: 0, image: p.thumbnailAsset ?? '', video: p.videoAsset ?? '',
     creator: who.handle, initials: who.handle.slice(0, 2).toUpperCase(),
-    caption: `${p.title}\n${p.caption}\n${p.userReference ? `Ref. ${p.userReference} (user-supplied, not authenticated)\n` : ''}${p.contentType} · DEMO${p.mediaStatus === 'ready' ? '' : ' · Media pending'}${p.rightsStatus ? ' · Owner-declared media' : ''}`,
+    caption: `${p.title}\n${p.caption}\n${p.userReference ? `Ref. ${p.userReference} (user-supplied, not authenticated)\n` : ''}${p.contentType} · DEMO${p.mediaStatus === 'ready' ? '' : ' · Media pending'}${p.rightsStatus === 'OWNER_DECLARED' ? ' · Owner-declared media' : p.rightsStatus ? ' · Media rights not reconfirmed' : ''}`,
     tags: `#${p.brand.replace(/[^A-Za-z]/g, '')} #DEMO`, likes: 120 + i * 7, comments: 3 + (i % 9), saves: 10 + (i % 13),
     wrist: 0, diameter: 0, thickness: 0, lug: U, movement: U, type: U, reserve: 0, vph: U, dial: U, bezel: U, water: U, retail: 0, market: 0,
     category: [], details: neutralDetails, is_live_verified: false, foundingMember: false, unverified: true };
