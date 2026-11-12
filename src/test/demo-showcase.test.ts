@@ -85,3 +85,18 @@ describe('V4 Phase A owner-declared videos', () => {
     expect(demoShowcaseAll.filter(w => w.video)).toHaveLength(13);
   });
 });
+
+import { forYouPosts as _fy } from '@/components/horology/demo-showcase';
+import { auctionPosts as _ap } from '@/components/horology/auction';
+describe('V4 For You duplicate policy', () => {
+  it('hides demo-01/07/13 from For You (32 -> 29) with no duplicate video', () => {
+    expect(_ap.length).toBe(32);
+    const fy = _fy(_ap);
+    expect(fy.length).toBe(29);
+    const v = fy.map(w => w.video).filter(Boolean);
+    expect(new Set(v).size).toBe(v.length);
+  });
+  it('keeps a hidden post when it is directly selected', () => {
+    expect(_fy(_ap, 'demo-07').some(w => w.id === 'demo-07')).toBe(true);
+  });
+});

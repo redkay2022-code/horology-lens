@@ -208,3 +208,7 @@ const rank = (w: Watch) => (w.video ? 0 : 1);
 /** Feed set: video posts first, then licensed-photo posts; posts without media stay internal only. */
 export const demoShowcaseFeed: Watch[] = demoShowcaseAll.filter(w => w.video || w.image).sort((a, b) => rank(a) - rank(b));
 export const demoCollectorByHandle = (handle: string) => demoCollectors.find(c => c.handle === handle);
+
+// V4 Phase A: showcase posts sharing a legacy post's video stay in data, profiles and direct links, but are hidden from the main For You grid.
+export const forYouDuplicateShowcaseIds: ReadonlySet<string> = new Set(['demo-01', 'demo-07', 'demo-13']);
+export const forYouPosts = <T extends { id: string }>(posts: T[], selected: string | null = null): T[] => posts.filter(w => !forYouDuplicateShowcaseIds.has(w.id) || w.id === selected);

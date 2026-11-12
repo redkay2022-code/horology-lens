@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Bookmark, Share2, ZoomIn, Plus, Check, Sparkles, 
 import { toast } from 'sonner';
 import { BadgeCheck, Flame, LockKeyhole } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
+import { forYouPosts } from './demo-showcase';
 import { canOffer, displayOnlyMessage } from './auction';
 import { FeedGrid } from './feed-grid';
 import { MacroInspection } from './macro-inspection';
@@ -33,7 +34,7 @@ export function WatchFeed({list,header,renderGrid}:{list?:Watch[];header?:ReactN
  const [tab,setTab]=useState<typeof feedTabs[number]>('For You');const [menu,setMenu]=useState(false);const [lang,setLang]=useState<'KO'|'EN'>('KO');
  const sheetOpen=useRef(false);const onSheet=useCallback((open:boolean)=>{sheetOpen.current=open},[]);
  const followedCreators=new Set(posts.filter(w=>followed.includes(w.id)).map(w=>w.creator));
- const byFilter=filter==='For You'?posts:posts.filter(w=>w.category.includes(filter)||w.brand===filter||w.type===filter||w.dial===filter||`${w.diameter}mm`===filter||w.tags.includes(filter));
+ const byFilter=filter==='For You'?(tab==='For You'?forYouPosts(posts,selected):posts):posts.filter(w=>w.category.includes(filter)||w.brand===filter||w.type===filter||w.dial===filter||`${w.diameter}mm`===filter||w.tags.includes(filter));
  const filtered=list??(tab==='Following'?(followTab==='Collectors'?byFilter.filter(w=>followedCreators.has(w.creator)):byFilter.filter(w=>{const k=postWatchKey(w);return !!k&&followedWatches.includes(k)})):tab==='Popular'?[...byFilter].sort((a,b)=>(b.likes+b.comments+b.saves)-(a.likes+a.comments+a.saves)||a.id.localeCompare(b.id)):byFilter);
  const onFollow=useCallback((w:Watch)=>{const ids=posts.filter(p=>p.creator===w.creator&&followed.includes(p.id)).map(p=>p.id);if(ids.length)ids.forEach(toggleFollow);else toggleFollow(w.id)},[posts,followed,toggleFollow]);
  const onVisible=useCallback((index:number)=>setActive(index),[]);
