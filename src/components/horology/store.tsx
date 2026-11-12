@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Watch } from './data';
 import { auctionPosts, canOffer, demoAccounts, ownPostMessage, type AuctionState, type DemoRole } from './auction';
 import { toast } from 'sonner';
@@ -16,7 +16,10 @@ type CommunityState = {
   acceptOffer: (watch: Watch, offerId?: string)=>boolean; declineOffer: (watch: Watch, offerId: string)=>void;
   readNotes: string[]; markRead: (ids: string[])=>void;
   role: DemoRole; me: string; setRole: (role: DemoRole)=>void; sendMessage: (id: string, text: string)=>void;
+  /** True while the dev-only /demo preview routes are open (set by the shell from the URL). */
+  demoScope: boolean; setDemoScope: (value: boolean)=>void;
 };
+export const demoUploadBlocked='시연 모드에서는 업로드할 수 없습니다';
 export const comingSoon='Silent Bid · 1:1 Chat — Coming Soon (not yet available in production)';
 const Community = createContext<CommunityState | null>(null);
 export function HorologyProvider({children}:{children:ReactNode}) {
@@ -30,29 +33,35 @@ export function HorologyProvider({children}:{children:ReactNode}) {
   const [cleanView,setCleanView]=useState(false);
   const [auctions,setAuctions]=useState<Record<string,AuctionState>>({});
   const [now,setNow]=useState(0);
-  const [role,setDemoRole]=useState<DemoRole>('buyer');const me:string=isDemoMode?demoAccounts[role]:'';
+  // /demo preview scope: session-only auction state from the existing auctionPosts data, never sent to the server.
+  const [demoScope,setDemoScope]=useState(false);const auctionDemo=isDemoMode||demoScope;
+  const [role,setDemoRole]=useState<DemoRole>('buyer');const me:string=auctionDemo?demoAccounts[role]:'';
   const setRole=(r:DemoRole)=>{if(isDemoMode)setDemoRole(r);};
   const [readNotes,setReadNotes]=useState<string[]>([]);
   const [offerWatch,setOfferWatch]=useState<Watch|null>(null);
   useEffect(()=>{
-    const time=Date.now(); setNow(time);
+    setNow(Date.now());
     const timer=setInterval(()=>setNow(Date.now()),1000);
-    if(!isDemoMode)return()=>clearInterval(timer); // server mode: no mock auction/chat history
-    setAuctions(Object.fromEntries(auctionPosts.filter(w=>w.auction).map(w=>[w.id,{highest:w.auction?.highest??0,count:w.auction?.count??0,mine:null,accepted:null,endsAt:time+(w.auction?.seconds??0)*1000,outbid:false,offers:w.creator===demoAccounts.seller?[{id:`seed-${w.id}`,buyer:'geneva.j',amount:w.auction?.highest??0,status:'pending' as const}]:[],buyer:null,chatId:null,messages:[]}])));
     return()=>clearInterval(timer);
   },[]);
+  // Seed once, on first entry to demo scope (immediately in demo builds). Server mode outside /demo never seeds.
+  const seeded=useRef(false);
+  useEffect(()=>{
+    if(!auctionDemo||seeded.current)return;seeded.current=true;const time=Date.now();
+    setAuctions(Object.fromEntries(auctionPosts.filter(w=>w.auction).map(w=>[w.id,{highest:w.auction?.highest??0,count:w.auction?.count??0,mine:null,accepted:null,endsAt:time+(w.auction?.seconds??0)*1000,outbid:false,offers:w.creator===demoAccounts.seller?[{id:`seed-${w.id}`,buyer:'geneva.j',amount:w.auction?.highest??0,status:'pending' as const}]:[],buyer:null,chatId:null,messages:[]}])));
+  },[auctionDemo]);
   const addUpload=(watch:Watch)=>{
     setUploads(old=>[watch,...old]);
     if(isDemoMode&&watch.is_live_verified&&watch.auction){const a=watch.auction;setAuctions(old=>({...old,[watch.id]:{highest:a.highest,count:a.count,mine:null,accepted:null,endsAt:Date.now()+a.seconds*1000,outbid:false,offers:[],buyer:null,chatId:null,messages:[]}}));}
   };
   const submitOffer=(watch:Watch,amount:number)=>{
-    if(!isDemoMode){toast.info(comingSoon);return false;}
+    if(!auctionDemo){toast.info(comingSoon);return false;}
     const state=auctions[watch.id];const increment=watch.auction?.increment??100;
     if(watch.creator===me){toast.error(ownPostMessage);return false;}
     if(!canOffer(watch,state,Date.now(),me)||!state||!Number.isSafeInteger(amount)||amount<state.highest+increment)return false;
     setAuctions(old=>{const current=old[watch.id];if(!current||!canOffer(watch,current,Date.now())||amount<current.highest+increment)return old;return {...old,[watch.id]:{...current,highest:amount,count:current.count+1,mine:me===demoAccounts.buyer?amount:current.mine,outbid:false,offers:[...current.offers,{id:`${me}-${current.offers.length}-${amount}`,buyer:me,amount,status:'pending'}]}}});return true;
   };
-  const simulateOutbid=(watch:Watch,on:boolean)=>setAuctions(old=>{if(!isDemoMode)return old;
+  const simulateOutbid=(watch:Watch,on:boolean)=>setAuctions(old=>{if(!auctionDemo)return old;
     const current=old[watch.id];if(!current||!canOffer(watch,current,Date.now()))return old;
     if(!on)return {...old,[watch.id]:{...current,outbid:false}};
     const highest=current.highest+(watch.auction?.increment??100)*2;
@@ -70,6 +79,6 @@ export function HorologyProvider({children}:{children:ReactNode}) {
   const declineOffer=(watch:Watch,offerId:string)=>{if(!isDemoMode||watch.creator!==me)return;setAuctions(old=>{const c=old[watch.id];if(!c||c.accepted!==null)return old;return {...old,[watch.id]:{...c,offers:c.offers.map(x=>x.id===offerId&&x.status==='pending'?{...x,status:'declined'}:x)}}});};
   const sendMessage=(id:string,text:string)=>setAuctions(old=>{if(!isDemoMode)return old;const a=old[id];const post=[...uploads,...auctionPosts].find(w=>w.id===id);if(!a||a.accepted===null||!text.trim()||(me!==a.buyer&&me!==post?.creator))return old;return {...old,[id]:{...a,messages:[...a.messages,{from:me,text:text.trim()}]}}});
   const toggle=(setter:React.Dispatch<React.SetStateAction<string[]>>, id:string)=>setter(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);
-  return <Community.Provider value={{liked,saved,followed,uploads,toggleLike:id=>toggle(setLiked,id),toggleSave:id=>toggle(setSaved,id),toggleFollow:id=>toggle(setFollowed,id),followedWatches,toggleWatchFollow:key=>toggle(setFollowedWatches,key),addUpload,uploadOpen,openUpload:()=>setUploadOpen(true),closeUpload:()=>setUploadOpen(false),filter,setFilter,cleanView,setCleanView,posts:[...uploads,...auctionPosts],auctions,now,offerWatch,openOffer:watch=>{if(!isDemoMode){toast.info(comingSoon);return;}if(watch.creator===me){toast.error(ownPostMessage);return;}if(canOffer(watch,auctions[watch.id],Date.now(),me))setOfferWatch(watch)},closeOffer:()=>setOfferWatch(null),submitOffer,simulateOutbid,acceptOffer,declineOffer,readNotes,markRead:ids=>setReadNotes(old=>[...new Set([...old,...ids])]),role,me,setRole,sendMessage}}>{children}</Community.Provider>;
+  return <Community.Provider value={{liked,saved,followed,uploads,toggleLike:id=>toggle(setLiked,id),toggleSave:id=>toggle(setSaved,id),toggleFollow:id=>toggle(setFollowed,id),followedWatches,toggleWatchFollow:key=>toggle(setFollowedWatches,key),addUpload,uploadOpen,openUpload:()=>{if(demoScope){toast.info(demoUploadBlocked);return;}setUploadOpen(true)},closeUpload:()=>setUploadOpen(false),filter,setFilter,cleanView,setCleanView,posts:[...uploads,...auctionPosts],auctions:auctionDemo?auctions:{},now,offerWatch,openOffer:watch=>{if(!auctionDemo){toast.info(comingSoon);return;}if(watch.creator===me){toast.error(ownPostMessage);return;}if(canOffer(watch,auctions[watch.id],Date.now(),me))setOfferWatch(watch)},closeOffer:()=>setOfferWatch(null),submitOffer,simulateOutbid,acceptOffer,declineOffer,readNotes,markRead:ids=>setReadNotes(old=>[...new Set([...old,...ids])]),role,me,setRole,sendMessage,demoScope,setDemoScope}}>{children}</Community.Provider>;
 }
 export function useCommunity(){const state=useContext(Community);if(!state)throw new Error('HorologyProvider is required');return state;}

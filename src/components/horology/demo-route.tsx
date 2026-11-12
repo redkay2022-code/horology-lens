@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 // True only inside the development-only /demo preview routes, so collector links stay inside the demo.
 export const DemoRouteContext = createContext(false);
 export const useInDemoRoute = () => useContext(DemoRouteContext);
+/** URL form of the same check, for components rendered outside the /demo route tree (the shell). Always false in production builds. */
+export const isDemoPath = (path: string): boolean => import.meta.env.DEV && (path === '/demo' || path.startsWith('/demo/'));
 
 type CollectorLinkProps = { handle: string; className?: string; 'aria-label'?: string; children?: ReactNode };
 

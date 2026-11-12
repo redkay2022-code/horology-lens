@@ -42,3 +42,6 @@
 - [ ] Deferred 5: expand to 30 distinct video assets
 - [ ] Phase B: 13 videos -> 30 target, 17 remaining; wait for user-supplied video assets; no placeholder generation, no scraping; preserve all post IDs and media connections
 - [ ] Blocked: no new implementation authorized; DO NOT DEPLOY; WAIT FOR NEXT CTO INSTRUCTION
+# DEMO 기능 복구 (audit baseline d8ba0a8)
+- [x] S1: /demo upload entry blocked (notice, no real sheet mounted); Silent Bid restored with session-only demo auctions — awaiting CTO review
+- [ ] S2+: menu, search, share, same-watch fixes — not authorized yet
