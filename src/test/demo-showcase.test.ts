@@ -46,3 +46,23 @@ describe('P1 presentation hardening', () => {
     for (const c of demoCollectors) expect(demoCollectorByHandle(c.handle)?.bio).toBe(c.bio);
   });
 });
+
+import { buildDemoShowcasePosts, demoShowcaseCatalog } from '@/components/horology/demo-showcase';
+describe('V3 stable ID media mapping', () => {
+  const ids = Array.from({ length: 60 }, (_, i) => `demo-${String(i + 1).padStart(2, '0')}`);
+  const sig = (ps: typeof demoShowcasePosts) => Object.fromEntries(ps.map(p => [p.demoPostId, [p.brand, p.model, p.demoCollectorId, p.videoAsset, p.thumbnailAsset, p.title]]));
+  it('keeps demo-01..demo-60 unique', () => {
+    expect(demoShowcasePosts.map(p => p.demoPostId).sort()).toEqual(ids);
+  });
+  it('maps the 3 videos and 6 photos to the approved IDs', () => {
+    const by = (id: string) => demoShowcasePosts.find(p => p.demoPostId === id)!;
+    expect(['demo-01', 'demo-07', 'demo-13'].map(id => [by(id).model, by(id).videoAsset?.split('/').pop()])).toEqual([['Submariner', 'submariner.webm'], ['Royal Oak', 'royal-oak.webm'], ['Nautilus', 'nautilus.webm']]);
+    expect(demoShowcasePosts.filter(p => p.videoAsset).map(p => p.demoPostId)).toEqual(['demo-01', 'demo-07', 'demo-13']);
+    expect(demoShowcasePosts.filter(p => !p.videoAsset && p.thumbnailAsset).map(p => p.demoPostId).sort()).toEqual(['demo-02', 'demo-14', 'demo-19', 'demo-25', 'demo-31', 'demo-34']);
+    expect(demoShowcasePosts.filter(p => !p.thumbnailAsset)).toHaveLength(51);
+  });
+  it('keeps IDs, collectors and media when the catalog order changes', () => {
+    const reversed = Object.fromEntries(Object.entries(demoShowcaseCatalog).reverse().map(([b, es]) => [b, [...es].reverse()]));
+    expect(sig(buildDemoShowcasePosts(reversed))).toEqual(sig(demoShowcasePosts));
+  });
+});
