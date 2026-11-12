@@ -7,6 +7,7 @@ import { WatchFeed } from '@/components/horology/feed';
 import { pageHead, type Watch } from '@/components/horology/data';
 import { useCommunity } from '@/components/horology/store';
 import { isDemoMode } from '@/lib/backend-mode';
+import { demoCollectorByHandle } from '@/components/horology/demo-showcase';
 import { ServerCreator } from '@/components/horology/server-views';
 
 export const Route = createFileRoute('/creator/$handle')({
@@ -20,6 +21,7 @@ function CreatorProfile() {
   const { handle } = Route.useParams();
   const { posts, followed, toggleFollow } = useCommunity();
   const [tab, setTab] = useState<typeof tabs[number]>('All Posts');
+  const demo = demoCollectorByHandle(handle);
   const own = posts.filter(p => p.creator === handle);
   const list = tab === 'Verified' ? own.filter(p => p.is_live_verified) : tab === 'Display Only' ? own.filter(p => !p.is_live_verified) : own;
   const followIds = own.filter(p => followed.includes(p.id)).map(p => p.id);
@@ -29,10 +31,10 @@ function CreatorProfile() {
   const header = <header className="creator-profile-head">
     <div className="creator-profile-top"><Button variant="ghost" size="icon" asChild><Link to="/" aria-label="Back"><ArrowLeft size={19} /></Link></Button><small>COLLECTOR</small></div>
     <div className="creator-profile-id"><span className="creator-avatar creator-profile-avatar">{own[0]?.initials ?? handle.slice(0, 2).toUpperCase()}</span>
-      <div><strong>{handle}</strong><span>@{handle}</span></div>
-      {own.length > 0 && <Button size="sm" variant={following ? 'outline' : 'default'} aria-pressed={following} onClick={follow}>{following ? <Check size={14} /> : <Plus size={14} />}{following ? 'Following' : 'Follow'}</Button>}
+      <div><strong>{demo?.displayName ?? handle}</strong><span>@{handle}</span></div>
+      {own.length > 0 && !demo && <Button size="sm" variant={following ? 'outline' : 'default'} aria-pressed={following} onClick={follow}>{following ? <Check size={14} /> : <Plus size={14} />}{following ? 'Following' : 'Follow'}</Button>}
     </div>
-    <p className="creator-profile-bio">소개가 아직 없습니다.</p>
+    <p className="creator-profile-bio">{demo ? `${demo.focus} · ${demo.bio} · DEMO collector (fictional)` : '소개가 아직 없습니다.'}</p>
     <dl className="creator-profile-stats"><div><dt>Posts</dt><dd>{own.length}</dd></div><div><dt>Followers</dt><dd title="공개 데이터 없음 · DEMO">—</dd></div><div><dt>Following</dt><dd title="공개 데이터 없음 · DEMO">—</dd></div></dl>
     <div className="creator-profile-tabs" role="tablist">{tabs.map(t => <Button key={t} variant="ghost" role="tab" aria-selected={tab === t} className={tab === t ? 'xhs-tab-active' : ''} onClick={() => setTab(t)}>{t}</Button>)}</div>
   </header>;

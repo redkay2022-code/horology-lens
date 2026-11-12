@@ -159,12 +159,17 @@ const neutralDetails: Watch['details'] = { overview: 'Investor demo post. Specif
 
 /** Adapter into the existing feed type. No offers (Display Only), no prices, no specs; empty video stays empty. */
 const { music: _m, identity: _i, edit: _e, auction: _a, ...plainBase } = watches[0];
-export const demoShowcaseFeed: Watch[] = demoShowcasePosts.map((p, i) => {
+/** Full internal set (60), including posts still waiting for media. */
+export const demoShowcaseAll: Watch[] = demoShowcasePosts.map((p, i) => {
   const who = demoCollectors.find(x => x.demoCollectorId === p.demoCollectorId)!;
   return { ...plainBase, id: p.demoPostId, brand: p.brand, model: p.model, ref: '', year: 0, image: p.thumbnailAsset ?? '', video: p.videoAsset ?? '',
     creator: who.handle, initials: who.handle.slice(0, 2).toUpperCase(),
     caption: `${p.title}\n${p.caption}\n${p.contentType} · DEMO${p.mediaStatus === 'ready' ? '' : ' · Media pending'}`,
     tags: `#${p.brand.replace(/[^A-Za-z]/g, '')} #DEMO`, likes: 120 + i * 7, comments: 3 + (i % 9), saves: 10 + (i % 13),
     wrist: 0, diameter: 0, thickness: 0, lug: U, movement: U, type: U, reserve: 0, vph: U, dial: U, bezel: U, water: U, retail: 0, market: 0,
-    category: [], details: neutralDetails, is_live_verified: false, foundingMember: false };
+    category: [], details: neutralDetails, is_live_verified: false, foundingMember: false, unverified: true };
 });
+const rank = (w: Watch) => (w.video ? 0 : 1);
+/** Feed set: video posts first, then licensed-photo posts; posts without media stay internal only. */
+export const demoShowcaseFeed: Watch[] = demoShowcaseAll.filter(w => w.video || w.image).sort((a, b) => rank(a) - rank(b));
+export const demoCollectorByHandle = (handle: string) => demoCollectors.find(c => c.handle === handle);
