@@ -229,6 +229,9 @@ const rank = (w: Watch) => (w.video ? 0 : 1);
 /** Feed set: video posts first, then licensed-photo posts; posts without media stay internal only. */
 export const demoShowcaseFeed: Watch[] = demoShowcaseAll.filter(w => w.video || w.image).sort((a, b) => rank(a) - rank(b));
 export const demoCollectorByHandle = (handle: string) => demoCollectors.find(c => c.handle === handle);
+/** Authors of the pre-showcase demo posts (auction.ts, feed-posts.ts). Handles only: no invented names, bios or history. */
+export const legacyDemoCollectorHandles: readonly string[] = ['SubmarinerKing', 'GenevaCollector', 'WatchLover99', 'VintageCosmograph', 'apollo.wrist', 'parisian.wrist', 'tonneau.theory', 'geneva.travels', 'saxon.hours', 'diver.daily', 'cockpit.collector', 'tropical.strap', 'kyoto.dial'];
+export const isDemoCollectorHandle = (handle: string) => !!demoCollectorByHandle(handle) || legacyDemoCollectorHandles.includes(handle);
 
 // V4 Phase A: showcase posts sharing a legacy post's video stay in data, profiles and direct links, but are hidden from the main For You grid.
 export const forYouDuplicateShowcaseIds: ReadonlySet<string> = new Set(['demo-01', 'demo-07', 'demo-13']);

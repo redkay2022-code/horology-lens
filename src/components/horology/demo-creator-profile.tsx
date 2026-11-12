@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { WatchFeed } from './feed';
 import type { Watch } from './data';
 import { useCommunity } from './store';
-import { demoCollectorByHandle } from './demo-showcase';
+import { demoCollectorByHandle, isDemoCollectorHandle } from './demo-showcase';
 import { useInDemoRoute } from './demo-route';
 
 const tabs = ['All Posts', 'Verified', 'Display Only'] as const;
@@ -29,7 +29,7 @@ export function DemoCreatorProfile({ handle }: { handle: string }) {
       <div><strong>{demo?.displayName ?? handle}</strong><span>@{handle}</span></div>
       {own.length > 0 && !demo && !inDemoRoute && <Button size="sm" variant={following ? 'outline' : 'default'} aria-pressed={following} onClick={follow}>{following ? <Check size={14} /> : <Plus size={14} />}{following ? 'Following' : 'Follow'}</Button>}
     </div>
-    <p className="creator-profile-bio">{demo ? `${demo.focus} · ${demo.bio} · DEMO collector (fictional)` : '소개가 아직 없습니다.'}</p>
+    <p className="creator-profile-bio">{demo ? `${demo.focus} · ${demo.bio} · DEMO collector (fictional)` : isDemoCollectorHandle(handle) ? 'DEMO collector (fictional)' : '소개가 아직 없습니다.'}</p>
     <dl className="creator-profile-stats"><div><dt>Posts</dt><dd>{own.length}</dd></div><div><dt>Followers</dt><dd title="공개 데이터 없음 · DEMO">—</dd></div><div><dt>Following</dt><dd title="공개 데이터 없음 · DEMO">—</dd></div></dl>
     <div className="creator-profile-tabs" role="tablist">{tabs.map(t => <Button key={t} variant="ghost" role="tab" aria-selected={tab === t} className={tab === t ? 'xhs-tab-active' : ''} onClick={() => setTab(t)}>{t}</Button>)}</div>
   </header>;
