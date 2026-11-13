@@ -7,15 +7,21 @@ import { WatchFeed } from './feed';
 import type { Watch } from './data';
 import { useCommunity } from './store';
 import { demoCollectorByHandle, isDemoCollectorHandle } from './demo-showcase';
-import { DemoBackButton, useInDemoRoute } from './demo-route';
+import { CollectorLink, DemoBackButton, useInDemoRoute } from './demo-route';
+import { resolveWatchFollow } from './watch-follow';
 
 const tabs = ['All Posts', 'Verified', 'Display Only'] as const;
+const followTabs = ['People', 'Watches'] as const;
 
 /** Demo-data collector profile, shared by /creator/$handle (demo builds) and the dev-only /demo/collector/$handle. */
 export function DemoCreatorProfile({ handle }: { handle: string }) {
   const inDemoRoute = useInDemoRoute();
-  const { posts, followed, toggleFollow } = useCommunity();
+  const { posts, followed, toggleFollow, followedWatches } = useCommunity();
   const [tab, setTab] = useState<typeof tabs[number]>('All Posts');
+  const [followTab, setFollowTab] = useState<typeof followTabs[number]>('People');
+  // Viewer's session follows from the shared provider: People = creators of followed posts, Watches = DEMO Watch Follow keys.
+  const people = [...new Set(posts.filter(p => followed.includes(p.id)).map(p => p.creator))];
+  const watchFollows = followedWatches.map(k => resolveWatchFollow(k, posts)).filter(x => x !== null);
   const demo = demoCollectorByHandle(handle);
   const own = posts.filter(p => p.creator === handle);
   const list = tab === 'Verified' ? own.filter(p => p.is_live_verified) : tab === 'Display Only' ? own.filter(p => !p.is_live_verified) : own;
@@ -31,6 +37,13 @@ export function DemoCreatorProfile({ handle }: { handle: string }) {
     </div>
     <p className="creator-profile-bio">{demo ? `${demo.focus} · ${demo.bio} · DEMO collector (fictional)` : isDemoCollectorHandle(handle) ? 'DEMO collector (fictional)' : 'No bio yet.'}</p>
     <dl className="creator-profile-stats"><div><dt>Posts</dt><dd>{own.length}</dd></div><div><dt>Followers</dt><dd title="No public data · DEMO">—</dd></div><div><dt>Following</dt><dd title="No public data · DEMO">—</dd></div></dl>
+    <section className="profile-following" aria-label="Your follows">
+      <div className="detail-heading-row"><h2>Following</h2><span className="detail-tag">YOUR DEMO SESSION</span></div>
+      <div className="xhs-row follow-subtabs" role="tablist" aria-label="Following type">{followTabs.map(t => <Button key={t} variant="category" role="tab" aria-selected={followTab === t} className={followTab === t ? 'category-active' : ''} onClick={() => setFollowTab(t)}>{t} <small>{t === 'People' ? people.length : watchFollows.length}</small></Button>)}</div>
+      {followTab === 'People'
+        ? people.length ? <div className="following-row" aria-label="Followed collectors">{people.map(h => <Button key={h} variant="ghost" className="following-person" asChild><CollectorLink handle={h} aria-label={`Open @${h} profile`}><span className="creator-avatar">{posts.find(p => p.creator === h)?.initials}</span><span>@{h}</span></CollectorLink></Button>)}</div> : <p className="following-empty">No collectors followed yet.</p>
+        : watchFollows.length ? <div className="following-row" aria-label="Followed watches">{watchFollows.map(({ target, watch }) => <div key={target.key} className="following-watch"><img src={watch.image} alt="" loading="lazy" /><span><small>{target.level}</small><strong>{watch.brand}</strong>{target.level !== 'Brand' && <em>{watch.model}</em>}{target.level === 'Reference' && <em>{target.label}</em>}</span></div>)}</div> : <p className="following-empty">No watches followed yet. Use Follow Watch in Details.</p>}
+    </section>
     <div className="creator-profile-tabs" role="tablist">{tabs.map(t => <Button key={t} variant="ghost" role="tab" aria-selected={tab === t} className={tab === t ? 'xhs-tab-active' : ''} onClick={() => setTab(t)}>{t}</Button>)}</div>
   </header>;
   return <WatchFeed list={list} header={header} renderGrid={(items: Watch[], onOpen: (id: string) => void) => items.length ? <div className="creator-profile-grid" aria-label="Creator posts">{items.map(w => <Button key={w.id} variant="ghost" className="creator-profile-tile" aria-label={`Open ${w.brand} ${w.model}`} onClick={() => onOpen(w.id)}>

@@ -3,10 +3,11 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { SpecSheet, marketFromOffer } from '@/components/horology/sheets';
 import { auctionPosts } from '@/components/horology/auction';
 import { money } from '@/components/horology/data';
+import { HorologyProvider } from '@/components/horology/store';
 
 const kermit = auctionPosts.find(w => w.ref === '126610LV')!;
 const nautilus = auctionPosts.find(w => w.ref === '5711/1A-010')!;
-const open = (w: typeof kermit) => render(<SpecSheet watch={w} open onClose={() => {}} onFilter={() => {}} />);
+const open = (w: typeof kermit) => render(<HorologyProvider><SpecSheet watch={w} open onClose={() => {}} onFilter={() => {}} /></HorologyProvider>);
 
 beforeAll(() => { globalThis.ResizeObserver ??= class { observe() {} unobserve() {} disconnect() {} } as unknown as typeof ResizeObserver; });
 
